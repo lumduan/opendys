@@ -81,6 +81,9 @@ export interface SettingsStrings {
   readonly fontSarabun: string;
   readonly fontMitr: string;
   readonly fontSystem: string;
+  readonly palette: string;
+  readonly paletteClassic: string;
+  readonly paletteColorblind: string;
   readonly size: string;
   readonly lineSpacing: string;
   readonly letterSpacing: string;
@@ -197,6 +200,9 @@ export const strings: Record<Language, UIStrings> = {
       fontSarabun: 'Sarabun (looped)',
       fontMitr: 'Mitr (rounded)',
       fontSystem: 'System',
+      palette: 'Color palette',
+      paletteClassic: 'Classic',
+      paletteColorblind: 'Colorblind-safe',
       size: 'Text size',
       lineSpacing: 'Line spacing',
       letterSpacing: 'Letter spacing',
@@ -301,6 +307,9 @@ export const strings: Record<Language, UIStrings> = {
       fontSarabun: 'สารบรรณ (มีหัว)',
       fontMitr: 'Mitr (มน)',
       fontSystem: 'ระบบ',
+      palette: 'ชุดสี',
+      paletteClassic: 'มาตรฐาน',
+      paletteColorblind: 'สำหรับตาบอดสี',
       size: 'ขนาดตัวอักษร',
       lineSpacing: 'ระยะบรรทัด',
       letterSpacing: 'ระยะตัวอักษร',

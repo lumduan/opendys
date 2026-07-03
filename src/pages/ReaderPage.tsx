@@ -24,7 +24,7 @@ export function ReaderPage() {
           <h1 className="text-2xl font-bold">{t.pageTitle}</h1>
           <p className="mt-1 text-sm text-base-content/70">{t.pageIntro}</p>
         </div>
-        <Link to="/" className="link link-primary shrink-0 text-sm">
+        <Link to="/" className="link shrink-0 text-sm">
           ← Home
         </Link>
       </header>

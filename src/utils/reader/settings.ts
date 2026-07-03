@@ -1,4 +1,5 @@
 import { clampMetrics } from '@/utils/latin';
+import { PALETTE_NAMES, type PaletteName } from './palette';
 
 export type FontChoice = 'dyslexic' | 'sarabun' | 'mitr' | 'system';
 export type ReaderLanguage = 'en' | 'th';
@@ -10,6 +11,7 @@ export interface ReaderSettings {
   letterSpacingEm: number;
   wordSpacingEm: number;
   fontChoice: FontChoice;
+  palette: PaletteName;
   colorCoding: boolean;
   guideLines: boolean;
   ruler: boolean;
@@ -25,6 +27,7 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   letterSpacingEm: 0.04,
   wordSpacingEm: 0.16,
   fontChoice: 'dyslexic',
+  palette: 'classic',
   colorCoding: true,
   guideLines: false,
   ruler: false,
@@ -76,6 +79,7 @@ export function clampReaderSettings(settings: ReaderSettings): ReaderSettings {
     letterSpacingEm: m.letterSpacingEm,
     wordSpacingEm: m.wordSpacingEm,
     fontChoice: FONT_CHOICES.includes(settings.fontChoice) ? settings.fontChoice : d.fontChoice,
+    palette: PALETTE_NAMES.includes(settings.palette) ? settings.palette : d.palette,
     colorCoding: Boolean(settings.colorCoding),
     guideLines: Boolean(settings.guideLines),
     ruler: Boolean(settings.ruler),

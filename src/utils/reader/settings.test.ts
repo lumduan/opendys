@@ -45,12 +45,14 @@ describe('clampReaderSettings', () => {
       fontSizePx: NaN,
       rulerDim: 'x' as unknown as number,
       fontChoice: 'bogus' as never,
+      palette: 'bogus' as never,
       ttsLang: 'fr' as never,
       colorCoding: 1 as unknown as boolean,
     });
     expect(c.fontSizePx).toBe(DEFAULT_READER_SETTINGS.fontSizePx);
     expect(c.rulerDim).toBe(DEFAULT_READER_SETTINGS.rulerDim);
     expect(c.fontChoice).toBe('dyslexic');
+    expect(c.palette).toBe('classic');
     expect(c.ttsLang).toBe('en');
     expect(c.colorCoding).toBe(true);
   });

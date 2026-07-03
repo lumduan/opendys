@@ -7,8 +7,11 @@ import { codePointOf } from './thaiChars';
 export type ColorRole = 'consonant' | 'vowel' | 'tone' | 'silent' | 'neutral';
 
 /**
- * Default palette. Deliberately dark, saturated hues intended to clear WCAG AA (≥4.5:1) on the
- * light pastel `cupcake` / `pastel` backgrounds; the final contrast audit is Phase 5.
+ * Default ("classic") FR-3 palette. Reader text is large, so the governing threshold is WCAG
+ * **AA-large 3:1**, which all four clear on cupcake + pastel (audited in Phase 5; classic tone-green
+ * is 4.42:1 = AA-large, just under AA-normal 4.5:1). The red/green pair is colorblind-confusable, so
+ * a colorblind-safe alternative + a non-color underline cue live in `@/utils/reader/palette` and are
+ * applied at render time (ColorText).
  *  - consonant → charcoal   - vowel → red   - tone → green   - silent/final → blue
  */
 export const THAI_COLORS: Record<ColorRole, string> = {

@@ -38,7 +38,7 @@ export function ThaiColorDemoPage() {
     <section className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Thai 4-level color engine — preview</h1>
-        <Link to="/" className="link link-primary text-sm">
+        <Link to="/" className="link text-sm">
           ← Home
         </Link>
       </div>

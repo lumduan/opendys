@@ -1,17 +1,19 @@
 import { memo, useMemo, type KeyboardEvent } from 'react';
 import { splitScriptRuns } from '@/utils/reader';
+import type { ColorRole } from '@/utils/thai';
 import { ColorText } from './ColorText';
 
 interface ChunkProps {
   raw: string;
   index: number;
   colorCoding: boolean;
+  palette: Record<ColorRole, string>;
   active: boolean;
   speakable: boolean;
   onSpeak: (index: number, text: string) => void;
 }
 
-function ChunkImpl({ raw, index, colorCoding, active, speakable, onSpeak }: ChunkProps) {
+function ChunkImpl({ raw, index, colorCoding, palette, active, speakable, onSpeak }: ChunkProps) {
   // Split into Thai/Latin runs for lang-tagging (font fallback + Latin-only letter-spacing).
   const runs = useMemo(() => splitScriptRuns(raw), [raw]);
 
@@ -42,7 +44,7 @@ function ChunkImpl({ raw, index, colorCoding, active, speakable, onSpeak }: Chun
       {runs.map((run, runIndex) =>
         run.script === 'thai' ? (
           <span key={runIndex} lang="th">
-            {colorCoding ? <ColorText text={run.text} /> : run.text}
+            {colorCoding ? <ColorText text={run.text} palette={palette} /> : run.text}
           </span>
         ) : (
           <span key={runIndex} lang="en">

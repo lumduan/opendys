@@ -1,6 +1,6 @@
 import { strings } from '@/i18n/strings';
 import { useSettings } from '@/context/settingsContext';
-import { READER_LIMITS, type FontChoice } from '@/utils/reader';
+import { READER_LIMITS, type FontChoice, type PaletteName } from '@/utils/reader';
 
 interface SliderProps {
   label: string;
@@ -75,6 +75,18 @@ export function TypographyPanel() {
           <option value="sarabun">{t.fontSarabun}</option>
           <option value="mitr">{t.fontMitr}</option>
           <option value="system">{t.fontSystem}</option>
+        </select>
+      </label>
+
+      <label className="form-control">
+        <span className="label-text mb-1">{t.palette}</span>
+        <select
+          className="select select-bordered select-sm"
+          value={settings.palette}
+          onChange={(event) => update({ palette: event.target.value as PaletteName })}
+        >
+          <option value="classic">{t.paletteClassic}</option>
+          <option value="colorblind">{t.paletteColorblind}</option>
         </select>
       </label>
 

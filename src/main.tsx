@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { SettingsProvider } from '@/context/SettingsProvider';
+import { ensurePersistentStorage } from './pwa';
 import App from './App';
 import './index.css';
 
@@ -20,3 +21,6 @@ createRoot(rootElement).render(
     </BrowserRouter>
   </StrictMode>,
 );
+
+// Keep the offline model/asset caches from being evicted (Phase 5, PWA).
+void ensurePersistentStorage();

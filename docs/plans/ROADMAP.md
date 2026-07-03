@@ -120,14 +120,17 @@ _(letter-spacing scoped to Latin only — Thai combining marks stay attached; ve
 
 > Goal: Installable, offline-first, and verified against WCAG AA.
 
-- [ ] `vite-plugin-pwa` (`generateSW`): precache app shell; `CacheFirst` runtime caching for
-      `traineddata` + `wasm`; raise `maximumFileSizeToCacheInBytes` above the model sizes
-- [ ] `navigator.storage.persist()` so models are not evicted
-- [ ] WCAG AA contrast audit of the 4 Thai colors on both pastel themes
-- [ ] Keyboard focus order + screen-reader labels across all interactive components
-- [ ] Bundle analysis; lazy-load OCR/worker code
+- [x] `vite-plugin-pwa` (`generateSW`): precache app shell + fonts (woff2 only); `CacheFirst` runtime
+      caching for the ~24 MB `/tesseract/` models+wasm (precache limit untouched — runtime-only)
+- [x] `navigator.storage.persist()` so the SW cache + tesseract IndexedDB models aren't evicted
+- [x] WCAG audit of the 4 Thai colors (large-text 3:1 passes on cupcake+pastel; codified as a test)
+      + a colorblind-safe (Okabe-Ito) palette option + a silent-role underline cue (WCAG 1.4.1)
+- [x] A11y sweep — axe-core 0 serious/critical on `/reader` + `/read` (fixed accent-as-text contrast)
+- [x] Bundle: lazy-load ReaderPage/OcrPage/dev (OCR worker already code-split); PWA icons
 
 **Exit criteria:** Lighthouse PWA + a11y pass; app works fully offline after first visit.
+_(SW + precache verified offline-capable; real airplane-mode OCR needs one online recognition first —
+models are runtime-cached, not precached. App shell/reader/fonts/TTS work offline immediately.)_
 
 ---
 
@@ -172,11 +175,11 @@ Phase 3 (OCR) depends only on Phase 0 and can proceed in parallel with Phase 2; 
 
 ## Current Status
 
-- **Active phase:** Phase 5 — Performance, PWA & Accessibility Verification
-- **Completed:** Phase 0 (bootstrap), Phase 1 (docs), Phase 2 (engine), Phase 3 (offline OCR),
-  Phase 4 (reading UI: fonts, typography, color, guides, ruler, TTS, settings)
+- **Active phase:** Phase 6 — Hardening, Open-Source Documentation & Release
+- **Completed:** Phase 0–5 — bootstrap, docs, engine, offline OCR, reading UI, and PWA + a11y
+  (installable/offline-first SW; axe 0 serious/critical; colorblind-safe palette option).
 - **In progress:** —
-- **Notes:** Published at `github.com/lumduan/opendys` (CI green). Device-verified manually: real
-  EN/TH TTS audio (headless has no voices — degrade path verified), camera capture, true
-  airplane-mode. Phase 5 to precache the ~24 MB OCR assets + ~278 KB fonts (woff2 only) and audit
-  AA contrast (vowel=red / tone=green is a red-green colorblind hazard — add a non-color cue).
+- **Notes:** Published at `github.com/lumduan/opendys` (CI green). Manual/device checks remain:
+  Lighthouse PWA+a11y, real EN/TH TTS audio, camera, and true airplane-mode OCR (needs one online
+  recognition first — models are runtime-cached). Phase 6 = README/LICENSE/CONTRIBUTING, nginx
+  header polish, and a tag-driven `v1.0.0` → GHCR release.

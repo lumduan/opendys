@@ -1,20 +1,14 @@
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { RootLayout } from '@/layouts/RootLayout';
 import { HomePage } from '@/pages/HomePage';
-import { ReaderPage } from '@/pages/ReaderPage';
-import { ThaiColorDemoPage } from '@/pages/ThaiColorDemoPage';
 
-// Code-split the OCR route — tesseract.js + WASM load only when the user actually reads.
-const OcrPage = lazy(() => import('@/pages/OcrPage').then((module) => ({ default: module.OcrPage })));
-
-function RouteFallback() {
-  return (
-    <div className="flex justify-center p-16">
-      <span className="loading loading-spinner loading-lg text-primary" aria-label="Loading" />
-    </div>
-  );
-}
+// Landing stays eager; everything heavier is code-split (Suspense lives in RootLayout).
+const ReaderPage = lazy(() => import('@/pages/ReaderPage').then((m) => ({ default: m.ReaderPage })));
+const OcrPage = lazy(() => import('@/pages/OcrPage').then((m) => ({ default: m.OcrPage })));
+const ThaiColorDemoPage = lazy(() =>
+  import('@/pages/ThaiColorDemoPage').then((m) => ({ default: m.ThaiColorDemoPage })),
+);
 
 export default function App() {
   return (
@@ -22,14 +16,7 @@ export default function App() {
       <Route element={<RootLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/reader" element={<ReaderPage />} />
-        <Route
-          path="/read"
-          element={
-            <Suspense fallback={<RouteFallback />}>
-              <OcrPage />
-            </Suspense>
-          }
-        />
+        <Route path="/read" element={<OcrPage />} />
         <Route path="/dev/thai-colors" element={<ThaiColorDemoPage />} />
       </Route>
     </Routes>

@@ -5,6 +5,7 @@ import { useSpeech } from '@/hooks/useSpeech';
 import {
   buildGuideBackground,
   buildReaderStyle,
+  paletteFor,
   splitSpeechChunks,
   type SpeechLang,
 } from '@/utils/reader';
@@ -31,6 +32,7 @@ export function Reader({ text, lang }: ReaderProps) {
 
   const chunks = useMemo(() => splitSpeechChunks(text), [text]);
   const hasThai = useMemo(() => containsThai(text), [text]);
+  const palette = useMemo(() => paletteFor(settings.palette), [settings.palette]);
 
   const surfaceStyle = useMemo(() => {
     const style = buildReaderStyle(settings);
@@ -66,8 +68,8 @@ export function Reader({ text, lang }: ReaderProps) {
             </button>
           )}
           {!voiceAvailable && speech.voicesReady && (
-            <span className="text-xs text-warning" data-testid="tts-degrade">
-              {lang === 'th' ? t.noThaiVoice : t.noVoice}
+            <span className="text-xs text-base-content/80" data-testid="tts-degrade">
+              ⚠ {lang === 'th' ? t.noThaiVoice : t.noVoice}
             </span>
           )}
         </div>
@@ -86,6 +88,7 @@ export function Reader({ text, lang }: ReaderProps) {
               raw={chunk.raw}
               index={index}
               colorCoding={settings.colorCoding}
+              palette={palette}
               active={index === speech.activeChunkIndex}
               speakable={chunk.speak !== '' && voiceAvailable}
               onSpeak={handleSpeakChunk}

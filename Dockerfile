@@ -52,6 +52,21 @@ server {
   add_header X-Frame-Options SAMEORIGIN always;
   add_header Referrer-Policy no-referrer always;
 
+  # PWA service worker + registration must NOT be long-cached — autoUpdate relies on revalidation.
+  # Exact-match locations outrank the hashed-asset regex below.
+  location = /sw.js {
+    add_header Cache-Control "no-cache";
+    add_header X-Content-Type-Options nosniff always;
+  }
+  location = /registerSW.js {
+    add_header Cache-Control "no-cache";
+    add_header X-Content-Type-Options nosniff always;
+  }
+  location = /manifest.webmanifest {
+    default_type application/manifest+json;
+    add_header Cache-Control "no-cache";
+  }
+
   # Immutable, content-hashed build assets + OCR models/wasm — cache hard.
   location ~* \.(?:js|css|woff2?|png|jpe?g|gif|svg|ico|wasm|traineddata|gz)$ {
     expires 1y;

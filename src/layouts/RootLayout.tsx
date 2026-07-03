@@ -1,6 +1,15 @@
+import { Suspense } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { strings } from '@/i18n/strings';
 import { SettingsButton } from '@/components/settings/SettingsButton';
+
+function RouteFallback() {
+  return (
+    <div className="flex justify-center p-16">
+      <span className="loading loading-spinner loading-lg text-primary" aria-label="Loading" />
+    </div>
+  );
+}
 
 export function RootLayout() {
   const t = strings.en;
@@ -21,14 +30,14 @@ export function RootLayout() {
             {t.reader.navLabel}
           </Link>
           <SettingsButton />
-          <span className="badge badge-secondary badge-outline hidden sm:inline-flex">
-            {t.offlineBadge}
-          </span>
+          <span className="badge badge-outline hidden sm:inline-flex">{t.offlineBadge}</span>
         </div>
       </header>
 
       <main className="flex-1">
-        <Outlet />
+        <Suspense fallback={<RouteFallback />}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <footer className="footer footer-center p-4 text-sm text-base-content/70">

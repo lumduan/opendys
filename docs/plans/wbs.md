@@ -49,11 +49,13 @@ Decomposes [ROADMAP](./ROADMAP.md) Phases 2–6 into concrete tasks. Status uses
 
 ## 5. Performance, PWA & A11y — [§Phase 5](./ROADMAP.md#phase-5--performance-pwa--accessibility-verification)
 
-- [ ] `vite-plugin-pwa` config (precache shell; `CacheFirst` for `traineddata`+`wasm`; raised size cap)
-- [ ] `navigator.storage.persist()`
-- [ ] WCAG AA contrast audit of the 4 Thai colors on `cupcake` + `pastel`
-- [ ] Keyboard focus order + ARIA labels; `prefers-reduced-motion`
-- [ ] Bundle analysis; code-split the OCR worker
+- [x] `vite-plugin-pwa` (generateSW): precache shell+woff2 (globIgnore `tesseract/**`); `CacheFirst`
+      runtime cache for `/tesseract/` models+wasm; manifest + PWA icons; nginx `sw.js` no-cache fix
+- [x] `src/pwa.ts` `ensurePersistentStorage()` (navigator.storage.persist)
+- [x] WCAG audit codified as a test (`src/utils/reader/contrast.ts` + `palette.ts`, AA-large 3:1 on
+      cupcake+pastel); colorblind-safe Okabe-Ito palette option + silent-role underline cue
+- [x] A11y sweep: axe-core 0 serious/critical on `/reader`+`/read`; `prefers-reduced-motion` (ruler)
+- [x] Lazy-load ReaderPage/OcrPage/dev route (OCR worker already code-split, ADR-0004)
 
 ## 6. Hardening & Release — [§Phase 6](./ROADMAP.md#phase-6--hardening-open-source-documentation--release)
 
