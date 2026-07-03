@@ -40,7 +40,21 @@ http {
 }
 EOF
 
-# Server block: SPA fallback + security headers + long-cache for hashed assets.
+# Security headers. Kept in a snippet because nginx `add_header` does NOT inherit into a location
+# that declares any add_header of its own — so this must be re-included in every such location.
+# CSP `connect-src 'self'` makes the zero-egress guarantee browser-enforced; `wasm-unsafe-eval`
+# + `worker-src blob:` keep the tesseract.js OCR worker working.
+COPY <<'EOF' /etc/nginx/snippets/security-headers.conf
+add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "no-referrer" always;
+add_header X-Frame-Options "DENY" always;
+add_header Permissions-Policy "accelerometer=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(self), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), hid=(), idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()" always;
+add_header Cross-Origin-Opener-Policy "same-origin" always;
+add_header Cross-Origin-Resource-Policy "same-origin" always;
+EOF
+
+# Server block: SPA fallback + security headers (snippet re-included per location) + caching.
 COPY <<'EOF' /etc/nginx/conf.d/default.conf
 server {
   listen 8080;
@@ -48,39 +62,40 @@ server {
   root /usr/share/nginx/html;
   index index.html;
 
-  add_header X-Content-Type-Options nosniff always;
-  add_header X-Frame-Options SAMEORIGIN always;
-  add_header Referrer-Policy no-referrer always;
+  include /etc/nginx/snippets/security-headers.conf;
 
   # PWA service worker + registration must NOT be long-cached — autoUpdate relies on revalidation.
-  # Exact-match locations outrank the hashed-asset regex below.
   location = /sw.js {
+    include /etc/nginx/snippets/security-headers.conf;
     add_header Cache-Control "no-cache";
-    add_header X-Content-Type-Options nosniff always;
   }
   location = /registerSW.js {
+    include /etc/nginx/snippets/security-headers.conf;
     add_header Cache-Control "no-cache";
-    add_header X-Content-Type-Options nosniff always;
   }
   location = /manifest.webmanifest {
+    include /etc/nginx/snippets/security-headers.conf;
     default_type application/manifest+json;
     add_header Cache-Control "no-cache";
   }
 
   # Immutable, content-hashed build assets + OCR models/wasm — cache hard.
   location ~* \.(?:js|css|woff2?|png|jpe?g|gif|svg|ico|wasm|traineddata|gz)$ {
+    include /etc/nginx/snippets/security-headers.conf;
     expires 1y;
     add_header Cache-Control "public, immutable";
   }
 
   # Never cache the entry document so new deploys are picked up immediately.
   location = /index.html {
+    include /etc/nginx/snippets/security-headers.conf;
     expires -1;
     add_header Cache-Control "no-cache";
   }
 
   # SPA fallback: unknown routes resolve to the app shell.
   location / {
+    include /etc/nginx/snippets/security-headers.conf;
     try_files $uri $uri/ /index.html;
   }
 }

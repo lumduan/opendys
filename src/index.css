@@ -13,6 +13,13 @@ body,
   height: 100%;
 }
 
+/* Global UI font: prefer the system UI font, but fall through to the bundled looped Thai face
+   (Sarabun) for Thai glyphs so the chrome (inputs, labels) renders on devices without a Thai
+   system font. The reader surface sets its own font via buildReaderStyle and is unaffected. */
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Sarabun', sans-serif;
+}
+
 /* ── Reader (Phase 4) ─────────────────────────────────────────────────────────
    letter-spacing detaches Thai combining marks and breaks the looped (มีหัว)
    connection, so the surface defaults to `normal` and the user's tracking is
