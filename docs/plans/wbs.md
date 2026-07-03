@@ -59,6 +59,8 @@ Decomposes [ROADMAP](./ROADMAP.md) Phases 2–6 into concrete tasks. Status uses
 
 ## 6. Hardening & Release — [§Phase 6](./ROADMAP.md#phase-6--hardening-open-source-documentation--release)
 
-- [ ] Nginx header/cache tuning verified against the built image
-- [ ] `README.md`, `LICENSE` (MIT), `CONTRIBUTING.md`, `CHANGELOG.md`, `RELEASING.md`
-- [ ] Tag-driven `v1.0.0` → GHCR image
+- [x] Nginx hardened (CSP/Permissions-Policy/XFO/COOP/CORP via a re-included snippet); verified on
+      every path + OCR-under-CSP with 0 violations / 0 egress
+- [x] `README.md` (+ `docs/assets/reader.png`), `LICENSE`, `CONTRIBUTING.md`, `CHANGELOG.md`,
+      `RELEASING.md`, `CODE_OF_CONDUCT.md`; global Sarabun fallback so Thai chrome renders anywhere
+- [x] Tag-driven `v1.0.0` → GHCR (`ghcr.io/lumduan/opendys`, public); GitHub Release created

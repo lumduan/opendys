@@ -138,12 +138,15 @@ models are runtime-cached, not precached. App shell/reader/fonts/TTS work offlin
 
 > Goal: A polished, documented, distributable v1.0.0.
 
-- [ ] Nginx security & caching header tuning; verified production Docker image
-- [ ] `README.md` (usage, self-hosting, privacy stance), `LICENSE` (MIT), `CONTRIBUTING`, `CHANGELOG`
-- [ ] `RELEASING.md`; tag-driven `v1.0.0` → GHCR image
-- [ ] Community docs: how to add a language, how to self-host an instance
+- [x] Nginx hardening: strict CSP (`connect-src 'self'` = enforced zero-egress), Permissions-Policy,
+      XFO DENY, COOP/CORP — applied on every path (fixed the `add_header` inheritance bug)
+- [x] `README.md` (+ screenshot), `LICENSE` (MIT), `CONTRIBUTING.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`
+- [x] `RELEASING.md`; tag-driven **`v1.0.0` → GHCR** (`ghcr.io/lumduan/opendys`, public, verified pullable)
+- [x] Community docs: how to add a language + self-host (README + CONTRIBUTING)
 
 **Exit criteria:** `v1.0.0` tag builds and publishes; a newcomer can self-host from the README alone.
+_✅ Met: `docker run -p 8080:8080 ghcr.io/lumduan/opendys:v1.0.0` runs the released image; OCR verified
+working under the hardened CSP with zero external requests._
 
 ---
 
@@ -175,11 +178,12 @@ Phase 3 (OCR) depends only on Phase 0 and can proceed in parallel with Phase 2; 
 
 ## Current Status
 
-- **Active phase:** Phase 6 — Hardening, Open-Source Documentation & Release
-- **Completed:** Phase 0–5 — bootstrap, docs, engine, offline OCR, reading UI, and PWA + a11y
-  (installable/offline-first SW; axe 0 serious/critical; colorblind-safe palette option).
-- **In progress:** —
-- **Notes:** Published at `github.com/lumduan/opendys` (CI green). Manual/device checks remain:
-  Lighthouse PWA+a11y, real EN/TH TTS audio, camera, and true airplane-mode OCR (needs one online
-  recognition first — models are runtime-cached). Phase 6 = README/LICENSE/CONTRIBUTING, nginx
-  header polish, and a tag-driven `v1.0.0` → GHCR release.
+- **Active phase:** — (all planned phases complete)
+- **Completed:** Phases 0–6 — bootstrap, docs, engine, offline OCR, reading UI, PWA + a11y, and the
+  hardened, documented **v1.0.0** release.
+- **Released:** `v1.0.0` → `ghcr.io/lumduan/opendys:v1.0.0` + `:latest` (public); GitHub Release
+  published; CI + Release workflows green.
+- **Manual/device checks remaining:** Lighthouse PWA+a11y, real EN/TH TTS audio on-device, camera
+  capture, true airplane-mode OCR (needs one online recognition first — models are runtime-cached).
+- **Future ideas** live in Phase 8 / RFCs (e.g. more languages, model-precache toggle, dark theme with
+  theme-aware Thai colors).
