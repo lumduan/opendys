@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base reading surface. Dyslexia-friendly typography controls arrive in Phase 4. */
+/* Base reading surface. */
 :root {
   color-scheme: light;
 }
@@ -11,4 +11,53 @@ html,
 body,
 #root {
   height: 100%;
+}
+
+/* ── Reader (Phase 4) ─────────────────────────────────────────────────────────
+   letter-spacing detaches Thai combining marks and breaks the looped (มีหัว)
+   connection, so the surface defaults to `normal` and the user's tracking is
+   re-applied ONLY to Latin runs. The value rides in on --reader-letter-spacing
+   (set inline by buildReaderStyle). See ADR-0002 / utils/reader/style.ts. */
+.reader-surface {
+  letter-spacing: normal;
+}
+.reader-surface :lang(en) {
+  letter-spacing: var(--reader-letter-spacing, normal);
+}
+
+/* Tappable speech chunks + active (currently-spoken) highlight. */
+.reader-chunk--speakable {
+  cursor: pointer;
+  border-radius: 4px;
+}
+.reader-chunk--speakable:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+.reader-chunk--active {
+  background: rgba(250, 204, 21, 0.4);
+  border-radius: 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Reading ruler: the band's huge box-shadow is clipped to this wrapper, so only
+   the reading text dims — nav and drawer (outside the wrapper) stay bright. */
+.reader-ruler-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+.reader-ruler-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  transform: translateY(var(--band-y, 0));
+  border-radius: 3px;
+  transition: transform 60ms linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reader-ruler-band {
+    transition: none;
+  }
 }

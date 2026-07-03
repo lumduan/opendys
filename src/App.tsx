@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { RootLayout } from '@/layouts/RootLayout';
 import { HomePage } from '@/pages/HomePage';
+import { ReaderPage } from '@/pages/ReaderPage';
 import { ThaiColorDemoPage } from '@/pages/ThaiColorDemoPage';
 
 // Code-split the OCR route — tesseract.js + WASM load only when the user actually reads.
@@ -20,6 +21,7 @@ export default function App() {
     <Routes>
       <Route element={<RootLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/reader" element={<ReaderPage />} />
         <Route
           path="/read"
           element={

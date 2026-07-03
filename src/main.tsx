@@ -1,6 +1,8 @@
+import './fonts'; // self-hosted @font-face declarations — must come first
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { SettingsProvider } from '@/context/SettingsProvider';
 import App from './App';
 import './index.css';
 
@@ -12,7 +14,9 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <SettingsProvider>
+        <App />
+      </SettingsProvider>
     </BrowserRouter>
   </StrictMode>,
 );

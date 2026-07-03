@@ -14,9 +14,12 @@ export function HomePage() {
               <span className="badge badge-primary badge-lg">English</span>
               <span className="badge badge-accent badge-lg">ภาษาไทย</span>
             </div>
-            <div className="mt-6">
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
               <Link to="/read" className="btn btn-primary btn-lg">
                 {t.ocr.title} →
+              </Link>
+              <Link to="/reader" className="btn btn-outline btn-lg">
+                {t.reader.pageTitle}
               </Link>
             </div>
           </div>

@@ -38,13 +38,14 @@ Decomposes [ROADMAP](./ROADMAP.md) Phases 2–6 into concrete tasks. Status uses
 
 ## 4. Universal Accessibility UI — [§Phase 4](./ROADMAP.md#phase-4--universal-accessibility-ui-components)
 
-- [ ] `src/context/SettingsContext.tsx` + `useSettings` (localStorage-persisted)
-- [ ] `src/components/settings/TypographyPanel.tsx` — sliders bound to `textMetrics`
-- [ ] Fonts via `@fontsource/{opendyslexic,sarabun,mitr}` (self-hosted, OFL-1.1)
-- [ ] `src/components/reader/ColorText.tsx` — renders `colorTokens`
-- [ ] `src/components/reader/GuideLines.tsx` — toggleable 4-line overlay
-- [ ] `src/components/reader/ReadingRuler.tsx` — mouse/touch/keyboard line focus
-- [ ] `src/hooks/useSpeech.ts` — `speechSynthesis` EN/TH voice matching + tap-to-speak
+- [x] `src/context/settingsContext.ts` + `SettingsProvider.tsx` + `useSettings` (localStorage-persisted)
+- [x] `src/utils/reader/` pure logic (settings, style/`buildReaderStyle`, scriptRuns, speechChunks,
+      guides, speech/`pickVoice`) + tests; `src/components/settings/{TypographyPanel,SettingsDrawer,SettingsButton}.tsx`
+- [x] Fonts via `@fontsource/{opendyslexic,sarabun,mitr}` (self-hosted, OFL-1.1) — `src/fonts.ts`
+- [x] `src/components/reader/{Reader,Chunk,ColorText,ReadingRuler}.tsx` (guides = surface background)
+- [x] Reading ruler — pointer/touch/keyboard, scoped box-shadow dimming
+- [x] `src/hooks/useSpeech.ts` — offline (localService) EN/TH voice matching + tap-to-speak + read-aloud
+- [x] `src/pages/ReaderPage.tsx` (`/reader`); `OcrResult` now renders `<Reader>`; i18n reader/settings
 
 ## 5. Performance, PWA & A11y — [§Phase 5](./ROADMAP.md#phase-5--performance-pwa--accessibility-verification)
 

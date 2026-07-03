@@ -104,14 +104,15 @@ This roadmap is dependency-ordered. Each phase lists its goal, tasks (with statu
 
 > Goal: The dyslexia-friendly reading surface and controls, for both scripts.
 
-- [ ] Typography customizer (font family, size, line/word/letter spacing) backed by `textMetrics`
-- [ ] Self-hosted fonts via `@fontsource`: OpenDyslexic (Latin), Sarabun (looped Thai), Mitr (alt)
-- [ ] Thai 4-level color rendering + toggleable 4-line overlay guides (FR-3)
-- [ ] Universal Reading Ruler (mouse / touch / keyboard, dims unread lines)
-- [ ] Offline Web Speech TTS with EN/TH voice switching + tap-to-speak (word / sentence)
-- [ ] Settings persistence (localStorage) via a React context
+- [x] Typography customizer (font family, size, line/word/letter spacing) via a settings drawer
+- [x] Self-hosted fonts via `@fontsource`: OpenDyslexic (Latin), Sarabun (looped Thai), Mitr (alt)
+- [x] Thai 4-level color rendering + toggleable guide lines (repeating-gradient background, FR-3)
+- [x] Universal Reading Ruler (pointer / touch / keyboard, dims unread text, scoped box-shadow)
+- [x] Offline Web Speech TTS (localService-only voices, tap-to-speak + read-aloud, graceful degrade)
+- [x] Settings persistence (localStorage) via a React context (instant state, debounced write)
 
 **Exit criteria:** a user can OCR text, restyle it, color-code Thai, run the ruler, and hear it read.
+_(letter-spacing scoped to Latin only — Thai combining marks stay attached; verified in-browser.)_
 
 ---
 
@@ -171,9 +172,11 @@ Phase 3 (OCR) depends only on Phase 0 and can proceed in parallel with Phase 2; 
 
 ## Current Status
 
-- **Active phase:** Phase 4 — Universal Accessibility UI Components
-- **Completed:** Phase 0 (bootstrap), Phase 1 (docs), Phase 2 (engine + tests), Phase 3 (offline OCR)
+- **Active phase:** Phase 5 — Performance, PWA & Accessibility Verification
+- **Completed:** Phase 0 (bootstrap), Phase 1 (docs), Phase 2 (engine), Phase 3 (offline OCR),
+  Phase 4 (reading UI: fonts, typography, color, guides, ruler, TTS, settings)
 - **In progress:** —
-- **Notes:** Published at `github.com/lumduan/opendys` (CI green). Camera capture & true airplane-mode
-  are device-verified manually; offline Thai TTS depends on OS-provided voices (verified at runtime
-  in Phase 4).
+- **Notes:** Published at `github.com/lumduan/opendys` (CI green). Device-verified manually: real
+  EN/TH TTS audio (headless has no voices — degrade path verified), camera capture, true
+  airplane-mode. Phase 5 to precache the ~24 MB OCR assets + ~278 KB fonts (woff2 only) and audit
+  AA contrast (vowel=red / tone=green is a red-green colorblind hazard — add a non-color cue).

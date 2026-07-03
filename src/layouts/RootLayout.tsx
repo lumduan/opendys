@@ -1,5 +1,6 @@
 import { Link, Outlet } from 'react-router-dom';
 import { strings } from '@/i18n/strings';
+import { SettingsButton } from '@/components/settings/SettingsButton';
 
 export function RootLayout() {
   const t = strings.en;
@@ -12,11 +13,17 @@ export function RootLayout() {
             {t.appName}
           </Link>
         </div>
-        <div className="flex-none items-center gap-2">
+        <div className="flex flex-none items-center gap-1">
           <Link to="/read" className="btn btn-ghost btn-sm">
             {t.ocr.navLabel}
           </Link>
-          <span className="badge badge-secondary badge-outline">{t.offlineBadge}</span>
+          <Link to="/reader" className="btn btn-ghost btn-sm">
+            {t.reader.navLabel}
+          </Link>
+          <SettingsButton />
+          <span className="badge badge-secondary badge-outline hidden sm:inline-flex">
+            {t.offlineBadge}
+          </span>
         </div>
       </header>
 

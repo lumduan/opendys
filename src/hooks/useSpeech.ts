@@ -1,0 +1,145 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  clampRate,
+  isOfflineVoiceAvailable,
+  pickVoice,
+  splitSpeechChunks,
+  type SpeechLang,
+} from '@/utils/reader';
+
+export interface UseSpeechResult {
+  supported: boolean;
+  voicesReady: boolean;
+  thaiVoiceAvailable: boolean;
+  englishVoiceAvailable: boolean;
+  speaking: boolean;
+  /** Index (into the Reader's chunk list) currently being spoken, or null. */
+  activeChunkIndex: number | null;
+  /** Read a whole passage, one utterance per sentence-chunk (highlights each as it plays). */
+  speak: (text: string, lang: SpeechLang, rate?: number) => void;
+  /** Read one chunk (e.g. a tapped sentence) and highlight the given chunk index. */
+  speakChunk: (text: string, lang: SpeechLang, chunkIndex: number, rate?: number) => void;
+  stop: () => void;
+}
+
+const hasSpeech = (): boolean => typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+interface SpeakItem {
+  speak: string;
+  index: number;
+}
+
+export function useSpeech(): UseSpeechResult {
+  const supported = hasSpeech();
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [voicesReady, setVoicesReady] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [activeChunkIndex, setActiveChunkIndex] = useState<number | null>(null);
+  const jobIdRef = useRef(0);
+
+  // Voices are empty on the first synchronous getVoices() in Chrome → wire voiceschanged + a 1s fallback.
+  useEffect(() => {
+    if (!supported) return;
+    const synth = window.speechSynthesis;
+    let settled = false;
+    const apply = () => {
+      const list = synth.getVoices();
+      if (list.length) {
+        settled = true;
+        setVoices(list);
+        setVoicesReady(true);
+      }
+    };
+    apply();
+    synth.addEventListener('voiceschanged', apply);
+    synth.onvoiceschanged = apply; // Safari relies on the property
+    const timer = window.setTimeout(() => {
+      if (!settled) {
+        setVoices(synth.getVoices());
+        setVoicesReady(true);
+      }
+    }, 1000);
+    return () => {
+      synth.removeEventListener('voiceschanged', apply);
+      synth.onvoiceschanged = null;
+      window.clearTimeout(timer);
+    };
+  }, [supported]);
+
+  // Stop speech on unmount / route change.
+  useEffect(
+    () => () => {
+      if (hasSpeech()) window.speechSynthesis.cancel();
+    },
+    [],
+  );
+
+  const stop = useCallback(() => {
+    jobIdRef.current += 1;
+    if (hasSpeech()) window.speechSynthesis.cancel();
+    // Safari does not fire onend after cancel(), so clear state directly.
+    setSpeaking(false);
+    setActiveChunkIndex(null);
+  }, []);
+
+  const enqueue = useCallback((items: SpeakItem[], lang: SpeechLang, rate: number) => {
+    if (!hasSpeech()) return;
+    const synth = window.speechSynthesis;
+    const voice = pickVoice(synth.getVoices(), lang);
+    if (!voice) return; // no offline voice → caller shows degrade UI; never fall back to a network voice
+
+    const speakable = items.filter((item) => item.speak !== '');
+    if (speakable.length === 0) return;
+
+    synth.cancel();
+    const jobId = (jobIdRef.current += 1);
+    setSpeaking(true);
+    setActiveChunkIndex(null);
+
+    speakable.forEach((item, i) => {
+      const utterance = new SpeechSynthesisUtterance(item.speak);
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+      utterance.rate = clampRate(rate);
+      utterance.onstart = () => {
+        if (jobId === jobIdRef.current) setActiveChunkIndex(item.index);
+      };
+      if (i === speakable.length - 1) {
+        utterance.onend = () => {
+          if (jobId === jobIdRef.current) {
+            setSpeaking(false);
+            setActiveChunkIndex(null);
+          }
+        };
+      }
+      synth.speak(utterance);
+    });
+  }, []);
+
+  const speak = useCallback(
+    (text: string, lang: SpeechLang, rate = 1) => {
+      const items = splitSpeechChunks(text).map((chunk, index) => ({ speak: chunk.speak, index }));
+      enqueue(items, lang, rate);
+    },
+    [enqueue],
+  );
+
+  const speakChunk = useCallback(
+    (text: string, lang: SpeechLang, chunkIndex: number, rate = 1) => {
+      enqueue([{ speak: text.trim(), index: chunkIndex }], lang, rate);
+    },
+    [enqueue],
+  );
+
+  return {
+    supported,
+    voicesReady,
+    thaiVoiceAvailable: isOfflineVoiceAvailable(voices, 'th'),
+    englishVoiceAvailable: isOfflineVoiceAvailable(voices, 'en'),
+    speaking,
+    activeChunkIndex,
+    speak,
+    speakChunk,
+    stop,
+  };
+}

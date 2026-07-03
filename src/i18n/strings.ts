@@ -57,6 +57,42 @@ export interface OcrStrings {
   };
 }
 
+export interface ReaderStrings {
+  readonly navLabel: string;
+  readonly pageTitle: string;
+  readonly pageIntro: string;
+  readonly placeholder: string;
+  readonly sample: string;
+  readonly langEnglish: string;
+  readonly langThai: string;
+  readonly readAloud: string;
+  readonly stop: string;
+  readonly noVoice: string;
+  readonly noThaiVoice: string;
+}
+
+export interface SettingsStrings {
+  readonly title: string;
+  readonly open: string;
+  readonly close: string;
+  readonly reset: string;
+  readonly font: string;
+  readonly fontDyslexic: string;
+  readonly fontSarabun: string;
+  readonly fontMitr: string;
+  readonly fontSystem: string;
+  readonly size: string;
+  readonly lineSpacing: string;
+  readonly letterSpacing: string;
+  readonly wordSpacing: string;
+  readonly colorCoding: string;
+  readonly guideLines: string;
+  readonly ruler: string;
+  readonly rulerDim: string;
+  readonly rulerBand: string;
+  readonly speechRate: string;
+}
+
 export interface UIStrings {
   readonly appName: string;
   readonly tagline: string;
@@ -64,6 +100,8 @@ export interface UIStrings {
   readonly footer: string;
   readonly pillars: readonly Pillar[];
   readonly ocr: OcrStrings;
+  readonly reader: ReaderStrings;
+  readonly settings: SettingsStrings;
 }
 
 export const strings: Record<Language, UIStrings> = {
@@ -136,6 +174,40 @@ export const strings: Record<Language, UIStrings> = {
         recognizeFailed: 'Something went wrong while reading the image. Please try again.',
       },
     },
+    reader: {
+      navLabel: 'Reader',
+      pageTitle: 'Reader',
+      pageIntro: 'Type or paste English or Thai text, then restyle it, color-code it, and hear it read.',
+      placeholder: 'Type or paste text to read…',
+      sample: 'Load a sample',
+      langEnglish: 'English',
+      langThai: 'ไทย (Thai)',
+      readAloud: 'Read aloud',
+      stop: 'Stop',
+      noVoice: 'No offline voice is installed for this language.',
+      noThaiVoice: 'No offline Thai voice found. On iOS/macOS: Settings ▸ Accessibility ▸ Spoken Content ▸ Voices ▸ Thai. On Windows: add the Thai language pack.',
+    },
+    settings: {
+      title: 'Reading settings',
+      open: 'Reading settings',
+      close: 'Close',
+      reset: 'Reset to defaults',
+      font: 'Font',
+      fontDyslexic: 'OpenDyslexic + Sarabun',
+      fontSarabun: 'Sarabun (looped)',
+      fontMitr: 'Mitr (rounded)',
+      fontSystem: 'System',
+      size: 'Text size',
+      lineSpacing: 'Line spacing',
+      letterSpacing: 'Letter spacing',
+      wordSpacing: 'Word spacing',
+      colorCoding: 'Color-code Thai (4 levels)',
+      guideLines: 'Thai guide lines',
+      ruler: 'Reading ruler',
+      rulerDim: 'Ruler dimming',
+      rulerBand: 'Ruler height',
+      speechRate: 'Speech speed',
+    },
   },
   th: {
     appName: 'opendys',
@@ -205,6 +277,40 @@ export const strings: Record<Language, UIStrings> = {
         modelMissing: 'โหลดโมเดลภาษาไม่สำเร็จ กรุณาสร้างไฟล์แอปใหม่แล้วลองอีกครั้ง',
         recognizeFailed: 'เกิดข้อผิดพลาดขณะอ่านรูปภาพ กรุณาลองใหม่อีกครั้ง',
       },
+    },
+    reader: {
+      navLabel: 'เครื่องอ่าน',
+      pageTitle: 'เครื่องอ่าน',
+      pageIntro: 'พิมพ์หรือวางข้อความภาษาไทยหรืออังกฤษ แล้วปรับรูปแบบ ระบายสี และฟังเสียงอ่าน',
+      placeholder: 'พิมพ์หรือวางข้อความที่ต้องการอ่าน…',
+      sample: 'ใส่ข้อความตัวอย่าง',
+      langEnglish: 'อังกฤษ',
+      langThai: 'ไทย',
+      readAloud: 'อ่านออกเสียง',
+      stop: 'หยุด',
+      noVoice: 'ไม่มีเสียงอ่านแบบออฟไลน์สำหรับภาษานี้',
+      noThaiVoice: 'ไม่พบเสียงภาษาไทยแบบออฟไลน์ บน iOS/macOS: ตั้งค่า ▸ การช่วยการเข้าถึง ▸ เนื้อหาที่พูด ▸ เสียง ▸ ไทย บน Windows: เพิ่มชุดภาษาไทย',
+    },
+    settings: {
+      title: 'ตั้งค่าการอ่าน',
+      open: 'ตั้งค่าการอ่าน',
+      close: 'ปิด',
+      reset: 'คืนค่าเริ่มต้น',
+      font: 'ฟอนต์',
+      fontDyslexic: 'OpenDyslexic + สารบรรณ',
+      fontSarabun: 'สารบรรณ (มีหัว)',
+      fontMitr: 'Mitr (มน)',
+      fontSystem: 'ระบบ',
+      size: 'ขนาดตัวอักษร',
+      lineSpacing: 'ระยะบรรทัด',
+      letterSpacing: 'ระยะตัวอักษร',
+      wordSpacing: 'ระยะคำ',
+      colorCoding: 'ระบายสีไทย (4 ระดับ)',
+      guideLines: 'เส้นบรรทัดไทย',
+      ruler: 'ไม้บรรทัดช่วยอ่าน',
+      rulerDim: 'ความมืดไม้บรรทัด',
+      rulerBand: 'ความสูงไม้บรรทัด',
+      speechRate: 'ความเร็วเสียงอ่าน',
     },
   },
 };
