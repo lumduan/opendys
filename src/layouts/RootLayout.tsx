@@ -12,7 +12,10 @@ export function RootLayout() {
             {t.appName}
           </Link>
         </div>
-        <div className="flex-none">
+        <div className="flex-none items-center gap-2">
+          <Link to="/read" className="btn btn-ghost btn-sm">
+            {t.ocr.navLabel}
+          </Link>
           <span className="badge badge-secondary badge-outline">{t.offlineBadge}</span>
         </div>
       </header>

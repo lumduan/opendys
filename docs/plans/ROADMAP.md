@@ -89,12 +89,12 @@ This roadmap is dependency-ordered. Each phase lists its goal, tasks (with statu
 
 > Goal: Fully offline image → text using Tesseract.js in a Web Worker with self-hosted models.
 
-- [ ] `tesseract.js@7` integrated inside a dedicated Web Worker
-- [ ] Self-host `worker.min.js`, the `tesseract.js-core` dist (all wasm variants), and fast
-      `eng` + `tha` `.traineddata.gz` under `public/` (zero CDN egress)
-- [ ] Capture (camera) + upload UI with progress, cancel, and offline-preparation states
-- [ ] Language auto-detect / manual toggle; graceful fallback when a model is missing
-- [ ] `ADR` for OCR model packaging & language-pack strategy
+- [x] `tesseract.js@7` via main-thread `createWorker` (its own dedicated worker; no nested worker — ADR-0004)
+- [x] Self-host `worker.min.js`, the LSTM `tesseract.js-core` variants, and committed `eng`+`tha`
+      `.traineddata.gz` under `/tesseract/**` (zero CDN egress)
+- [x] Capture (camera) + upload UI with progress, cancel, and preparing/error states
+- [x] Language toggle (English / Thai / Auto `eng+tha`); preflight model check → clear "missing" error
+- [x] `ADR-0004` — OCR model packaging & language-pack strategy
 
 **Exit criteria:** an uploaded EN or TH image decodes to text offline (airplane mode) after first load.
 
@@ -171,8 +171,9 @@ Phase 3 (OCR) depends only on Phase 0 and can proceed in parallel with Phase 2; 
 
 ## Current Status
 
-- **Active phase:** Phase 2 — Core Linguistic & Parsing Engine
-- **Completed:** Phase 0 (bootstrap), Phase 1 (docs), Phase 2 (engine + tests)
+- **Active phase:** Phase 4 — Universal Accessibility UI Components
+- **Completed:** Phase 0 (bootstrap), Phase 1 (docs), Phase 2 (engine + tests), Phase 3 (offline OCR)
 - **In progress:** —
-- **Blocked by:** GitHub remote not yet configured (CI runs only once the repo is pushed);
-  offline Thai TTS depends on OS-provided voices (verified at runtime in Phase 4).
+- **Notes:** Published at `github.com/lumduan/opendys` (CI green). Camera capture & true airplane-mode
+  are device-verified manually; offline Thai TTS depends on OS-provided voices (verified at runtime
+  in Phase 4).

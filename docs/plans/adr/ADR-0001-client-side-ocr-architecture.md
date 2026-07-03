@@ -1,6 +1,7 @@
 # ADR-0001 — 100% Client-Side OCR Architecture
 
-- **Status:** Accepted
+- **Status:** Accepted — refined by [ADR-0004](./ADR-0004-ocr-model-packaging.md) (language-pack
+  format & packaging; the "fast" models are superseded by `4.0.0_best_int`)
 - **Date:** 2026-07-03
 
 ## Context

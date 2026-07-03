@@ -14,6 +14,11 @@ export function HomePage() {
               <span className="badge badge-primary badge-lg">English</span>
               <span className="badge badge-accent badge-lg">ภาษาไทย</span>
             </div>
+            <div className="mt-6">
+              <Link to="/read" className="btn btn-primary btn-lg">
+                {t.ocr.title} →
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -36,7 +41,7 @@ export function HomePage() {
       </div>
 
       <p className="mt-8 text-center text-sm text-base-content/60">
-        Bootstrap scaffold — the engine and UI arrive phase-by-phase (see docs/plans/ROADMAP.md).
+        Offline OCR is live. Reading tools and text-to-speech arrive next (see docs/plans/ROADMAP.md).
       </p>
     </section>
   );

@@ -8,12 +8,62 @@ export interface Pillar {
   readonly body: string;
 }
 
+export interface OcrStrings {
+  readonly navLabel: string;
+  readonly title: string;
+  readonly intro: string;
+  readonly languageLabel: string;
+  readonly langEnglish: string;
+  readonly langThai: string;
+  readonly langAuto: string;
+  readonly tabUpload: string;
+  readonly tabCamera: string;
+  readonly upload: {
+    readonly label: string;
+    readonly hint: string;
+    readonly invalidType: string;
+  };
+  readonly camera: {
+    readonly start: string;
+    readonly capture: string;
+    readonly stop: string;
+    readonly unavailable: string;
+    readonly denied: string;
+  };
+  // keys align with OcrProgressMessageKey (src/utils/ocr/progress.ts)
+  readonly progress: {
+    readonly initializing: string;
+    readonly loadingLanguage: string;
+    readonly initializingApi: string;
+    readonly recognizing: string;
+    readonly cancel: string;
+  };
+  readonly result: {
+    readonly heading: string;
+    readonly empty: string;
+    readonly copy: string;
+    readonly copied: string;
+    readonly colorView: string;
+    readonly plainView: string;
+    readonly confidence: string;
+    readonly newImage: string;
+  };
+  // keys align with OcrErrorKey (src/hooks/useOcr.ts)
+  readonly errors: {
+    readonly unsupported: string;
+    readonly invalidFile: string;
+    readonly modelMissing: string;
+    readonly recognizeFailed: string;
+  };
+}
+
 export interface UIStrings {
   readonly appName: string;
   readonly tagline: string;
   readonly offlineBadge: string;
   readonly footer: string;
   readonly pillars: readonly Pillar[];
+  readonly ocr: OcrStrings;
 }
 
 export const strings: Record<Language, UIStrings> = {
@@ -40,6 +90,52 @@ export const strings: Record<Language, UIStrings> = {
         body: 'Tap any word or sentence for offline text-to-speech in English or Thai.',
       },
     ],
+    ocr: {
+      navLabel: 'Read text',
+      title: 'Read text from an image',
+      intro: 'Upload or photograph text in English or Thai. Recognition runs entirely on your device.',
+      languageLabel: 'Language',
+      langEnglish: 'English',
+      langThai: 'ไทย (Thai)',
+      langAuto: 'Auto (English + Thai)',
+      tabUpload: 'Upload',
+      tabCamera: 'Camera',
+      upload: {
+        label: 'Choose an image',
+        hint: 'Drag an image here, or choose a file (PNG, JPG, WebP, GIF, BMP).',
+        invalidType: 'That file type is not supported. Please use a PNG, JPG, WebP, GIF, or BMP image.',
+      },
+      camera: {
+        start: 'Start camera',
+        capture: 'Capture',
+        stop: 'Stop',
+        unavailable: 'No camera is available on this device. Please upload an image instead.',
+        denied: 'Camera permission was denied. Please allow access or upload an image instead.',
+      },
+      progress: {
+        initializing: 'Preparing the offline OCR engine…',
+        loadingLanguage: 'Loading the language model…',
+        initializingApi: 'Getting ready…',
+        recognizing: 'Recognizing text…',
+        cancel: 'Cancel',
+      },
+      result: {
+        heading: 'Recognized text',
+        empty: 'No text was found in this image. Try a clearer or higher-contrast photo.',
+        copy: 'Copy',
+        copied: 'Copied!',
+        colorView: 'Color-code Thai',
+        plainView: 'Plain text',
+        confidence: 'Confidence',
+        newImage: 'Read another image',
+      },
+      errors: {
+        unsupported: 'This browser cannot run on-device OCR (WebAssembly or Web Workers are unavailable).',
+        invalidFile: 'That file type is not supported. Please use a PNG, JPG, WebP, GIF, or BMP image.',
+        modelMissing: 'A language model could not be loaded. Please rebuild the app assets and try again.',
+        recognizeFailed: 'Something went wrong while reading the image. Please try again.',
+      },
+    },
   },
   th: {
     appName: 'opendys',
@@ -64,5 +160,51 @@ export const strings: Record<Language, UIStrings> = {
         body: 'แตะคำหรือประโยคเพื่อฟังเสียงอ่านแบบออฟไลน์ทั้งภาษาไทยและอังกฤษ',
       },
     ],
+    ocr: {
+      navLabel: 'อ่านข้อความ',
+      title: 'อ่านข้อความจากรูปภาพ',
+      intro: 'อัปโหลดหรือถ่ายรูปข้อความภาษาไทยหรืออังกฤษ การแปลงข้อความทำงานบนเครื่องของคุณทั้งหมด',
+      languageLabel: 'ภาษา',
+      langEnglish: 'อังกฤษ',
+      langThai: 'ไทย',
+      langAuto: 'อัตโนมัติ (ไทย + อังกฤษ)',
+      tabUpload: 'อัปโหลด',
+      tabCamera: 'กล้อง',
+      upload: {
+        label: 'เลือกรูปภาพ',
+        hint: 'ลากรูปมาที่นี่ หรือเลือกไฟล์ (PNG, JPG, WebP, GIF, BMP)',
+        invalidType: 'ไม่รองรับไฟล์ชนิดนี้ กรุณาใช้รูป PNG, JPG, WebP, GIF หรือ BMP',
+      },
+      camera: {
+        start: 'เปิดกล้อง',
+        capture: 'ถ่ายภาพ',
+        stop: 'หยุด',
+        unavailable: 'ไม่พบกล้องบนอุปกรณ์นี้ กรุณาอัปโหลดรูปภาพแทน',
+        denied: 'การเข้าถึงกล้องถูกปฏิเสธ กรุณาอนุญาตหรืออัปโหลดรูปภาพแทน',
+      },
+      progress: {
+        initializing: 'กำลังเตรียมเครื่องมือ OCR แบบออฟไลน์…',
+        loadingLanguage: 'กำลังโหลดโมเดลภาษา…',
+        initializingApi: 'กำลังเตรียมความพร้อม…',
+        recognizing: 'กำลังอ่านข้อความ…',
+        cancel: 'ยกเลิก',
+      },
+      result: {
+        heading: 'ข้อความที่อ่านได้',
+        empty: 'ไม่พบข้อความในรูปนี้ ลองใช้รูปที่ชัดขึ้นหรือคมชัดกว่านี้',
+        copy: 'คัดลอก',
+        copied: 'คัดลอกแล้ว!',
+        colorView: 'ระบายสีภาษาไทย',
+        plainView: 'ข้อความธรรมดา',
+        confidence: 'ความมั่นใจ',
+        newImage: 'อ่านรูปอื่น',
+      },
+      errors: {
+        unsupported: 'เบราว์เซอร์นี้ไม่รองรับ OCR บนเครื่อง (ไม่มี WebAssembly หรือ Web Worker)',
+        invalidFile: 'ไม่รองรับไฟล์ชนิดนี้ กรุณาใช้รูป PNG, JPG, WebP, GIF หรือ BMP',
+        modelMissing: 'โหลดโมเดลภาษาไม่สำเร็จ กรุณาสร้างไฟล์แอปใหม่แล้วลองอีกครั้ง',
+        recognizeFailed: 'เกิดข้อผิดพลาดขณะอ่านรูปภาพ กรุณาลองใหม่อีกครั้ง',
+      },
+    },
   },
 };

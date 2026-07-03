@@ -26,11 +26,15 @@ Decomposes [ROADMAP](./ROADMAP.md) Phases 2–6 into concrete tasks. Status uses
 
 ## 3. Multi-Lingual Web Worker OCR — [§Phase 3](./ROADMAP.md#phase-3--multi-lingual-web-worker-ocr)
 
-- [ ] `src/workers/ocr.worker.ts` wrapping `tesseract.js@7`
-- [ ] `public/tesseract/` — self-hosted `worker.min.js`, core wasm variants, `eng`/`tha` traineddata
-- [ ] `src/components/ocr/` — `CapturePanel`, `UploadDropzone`, `OcrProgress`, error/offline states
-- [ ] `src/hooks/useOcr.ts` — job lifecycle (`idle→preparing→recognizing→done|error`)
-- [ ] ADR — OCR model packaging & fast-vs-best language packs
+- [x] ~~`src/workers/ocr.worker.ts`~~ → `src/services/ocr/tesseractClient.ts` (main-thread
+      `createWorker`; tesseract owns the worker — no nested worker, per ADR-0004) + `imagePrep.ts`
+- [x] `vite-plugin-static-copy` → `/tesseract/` (`worker.min.js`, LSTM core variants); committed
+      `public/tesseract/lang/{eng,tha}.traineddata.gz`; `scripts/fetch-ocr-models.mjs` (maintainer)
+- [x] `src/utils/ocr/` pure helpers (paths, language, progress, text, image, support) + tests
+- [x] `src/components/ocr/` — `UploadDropzone`, `CapturePanel`, `LanguageSelect`, `OcrProgress`, `OcrResult`
+- [x] `src/hooks/useOcr.ts` — job lifecycle (`idle→preparing→recognizing→done|error`) + `useOcr.test.ts`
+- [x] `src/pages/OcrPage.tsx` (lazy `/read` route); i18n `ocr` strings (en + th)
+- [x] [ADR-0004](./adr/ADR-0004-ocr-model-packaging.md) — OCR model packaging & language-pack strategy
 
 ## 4. Universal Accessibility UI — [§Phase 4](./ROADMAP.md#phase-4--universal-accessibility-ui-components)
 
