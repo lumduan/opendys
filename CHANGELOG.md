@@ -6,6 +6,13 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Migrated linting to **ESLint 9 flat config** (`eslint.config.js`): unified `typescript-eslint`,
+  `eslint-plugin-react-hooks` v5, and `eslint-plugin-react-refresh` 0.5.
+- Bumped the CI/Release GitHub Actions to their Node-24 runtimes and the Docker build stage +
+  dev compose to `node:24-alpine` (Node 20 is EOL).
+
 ## [1.0.0] — 2026-07-03
 
 First public release — a free, 100% client-side, offline dyslexia reading aid for English and Thai.

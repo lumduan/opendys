@@ -9,10 +9,6 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
-      # eslint-plugin-react-refresh 0.5+ requires ESLint 9 (flat config); we run ESLint 8.
-      # Stay on 0.4.x (patches still allowed) until an ESLint 9 migration.
-      - dependency-name: "eslint-plugin-react-refresh"
-        update-types: ["version-update:semver-minor"]
     groups:
       react:
         patterns:
@@ -25,11 +21,14 @@ updates:
         patterns:
           - "vite"
           - "@vitejs/*"
+          - "vite-plugin-*"
           - "vitest"
           - "@vitest/*"
           - "typescript"
+          - "typescript-eslint"
           - "eslint*"
-          - "@typescript-eslint/*"
+          - "@eslint/*"
+          - "globals"
 
   - package-ecosystem: github-actions
     directory: "/"
