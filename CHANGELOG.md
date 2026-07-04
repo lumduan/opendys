@@ -6,6 +6,8 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-07-04
+
 ### Added
 
 - **Karaoke read-aloud** — during Read-Aloud, the word currently being spoken is highlighted in real
@@ -93,7 +95,8 @@ First public release — a free, 100% client-side, offline dyslexia reading aid 
 - **Engineering system** — `docs/plans/` (ROADMAP, HLD, FRD, WBS, ADRs), GitHub Actions CI
   (lint → typecheck → coverage → build) and a tag-driven GHCR release.
 
-[Unreleased]: https://github.com/lumduan/opendys/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/lumduan/opendys/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/lumduan/opendys/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/lumduan/opendys/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/lumduan/opendys/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/lumduan/opendys/compare/v1.0.0...v1.0.1
