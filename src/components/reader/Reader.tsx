@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { strings } from '@/i18n/strings';
 import { useSettings } from '@/context/settingsContext';
 import { useSpeech } from '@/hooks/useSpeech';
+import { useWordHighlight } from '@/hooks/useWordHighlight';
 import {
   buildGuideBackground,
   buildReaderStyle,
@@ -29,8 +30,12 @@ export function Reader({ text, lang }: ReaderProps) {
   const t = strings.en.reader;
   const { settings } = useSettings();
   const speech = useSpeech();
+  const surfaceRef = useRef<HTMLDivElement>(null);
 
   const chunks = useMemo(() => splitSpeechChunks(text), [text]);
+  // Karaoke: paint the currently-spoken word (from onboundary) via the CSS Custom Highlight API. A
+  // no-op where onboundary / the API are unavailable (e.g. iOS Safari) — the sentence highlight stays.
+  useWordHighlight(speech.activeWord, chunks, surfaceRef);
   const hasThai = useMemo(() => containsThai(text), [text]);
   const palette = useMemo(() => paletteFor(settings.palette), [settings.palette]);
 
@@ -77,6 +82,7 @@ export function Reader({ text, lang }: ReaderProps) {
 
       <ReadingRuler enabled={settings.ruler} dim={settings.rulerDim} bandPx={settings.rulerBandPx}>
         <div
+          ref={surfaceRef}
           className="reader-surface whitespace-pre-wrap break-words rounded-box bg-base-100 p-5 shadow-sm"
           style={surfaceStyle}
           lang={lang}

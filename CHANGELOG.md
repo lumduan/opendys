@@ -6,6 +6,18 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Karaoke read-aloud** — during Read-Aloud, the word currently being spoken is highlighted in real
+  time (Web Speech `onboundary` → CSS Custom Highlight API, so Thai marks stay perfectly stacked). Falls
+  back gracefully to the sentence highlight where word boundaries aren't available (e.g. iOS Safari).
+
+### Changed
+
+- **Thai color-coding now distinguishes 6 categories** — consonant, spacing vowel, **upper vowel**,
+  **lower vowel**, tone mark, and silent final each get a distinct (AA-large, colorblind-aware) color,
+  applied per grapheme cluster so mark stacking stays correct on Safari/iOS + Chrome (ADR-0006).
+
 ## [1.2.0] — 2026-07-04
 
 ### Added

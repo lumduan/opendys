@@ -8,8 +8,10 @@ const SAMPLE = 'เด็กน้อยอ่านหนังสือ รั
 
 const LEGEND: ReadonlyArray<{ role: ColorRole; label: string }> = [
   { role: 'consonant', label: 'Consonant (base)' },
-  { role: 'vowel', label: 'Vowel' },
-  { role: 'tone', label: 'Tone mark' },
+  { role: 'vowel', label: 'Vowel (spacing)' },
+  { role: 'upperVowel', label: 'Upper vowel (สระบน)' },
+  { role: 'lowerVowel', label: 'Lower vowel (สระล่าง)' },
+  { role: 'tone', label: 'Tone mark (วรรณยุกต์)' },
   { role: 'silent', label: 'Silent / final (การันต์)' },
 ];
 

@@ -1,6 +1,7 @@
 # ADR-0003 — Thai 4-Level Orthography Parsing Strategy
 
-- **Status:** Accepted
+- **Status:** Accepted — refined by [ADR-0006](./ADR-0006-granular-thai-coloring-and-karaoke-tts.md)
+  (the model now renders 6 distinct category colors; still one span per grapheme cluster)
 - **Date:** 2026-07-03
 
 ## Context

@@ -47,6 +47,15 @@ body {
   -webkit-box-decoration-break: clone;
 }
 
+/* Karaoke: the word currently spoken during read-aloud, painted via the CSS Custom Highlight API —
+   a text range, NOT a wrapping element, so Thai combining marks stay in one shaping run (Safari-safe).
+   Stronger than the sentence-level --active band; the 4-level text colors show through. Where the API
+   or onboundary word events are unavailable (e.g. iOS Safari), no word highlight appears and the
+   sentence highlight remains. */
+::highlight(reader-word) {
+  background-color: rgba(251, 191, 36, 0.75);
+}
+
 /* Reading ruler: the band's huge box-shadow is clipped to this wrapper, so only
    the reading text dims — nav and drawer (outside the wrapper) stay bright. */
 .reader-ruler-wrapper {

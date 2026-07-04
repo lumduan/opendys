@@ -7,6 +7,14 @@ import {
   type SpeechLang,
 } from '@/utils/reader';
 
+/** The word currently being spoken, located by the TTS `onboundary` event. `charIndex`/`charLength`
+ *  are offsets into the chunk's TRIMMED spoken string (see `wordHighlight` helpers). */
+export interface ActiveWord {
+  chunkIndex: number;
+  charIndex: number;
+  charLength: number;
+}
+
 export interface UseSpeechResult {
   supported: boolean;
   voicesReady: boolean;
@@ -15,6 +23,9 @@ export interface UseSpeechResult {
   speaking: boolean;
   /** Index (into the Reader's chunk list) currently being spoken, or null. */
   activeChunkIndex: number | null;
+  /** The word currently being spoken (from `onboundary`), or null. Unreliable on Safari/iOS + many
+   *  offline voices — consumers fall back to `activeChunkIndex` when it stays null. */
+  activeWord: ActiveWord | null;
   /** Read a whole passage, one utterance per sentence-chunk (highlights each as it plays). */
   speak: (text: string, lang: SpeechLang, rate?: number) => void;
   /** Read one chunk (e.g. a tapped sentence) and highlight the given chunk index. */
@@ -35,6 +46,7 @@ export function useSpeech(): UseSpeechResult {
   const [voicesReady, setVoicesReady] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [activeChunkIndex, setActiveChunkIndex] = useState<number | null>(null);
+  const [activeWord, setActiveWord] = useState<ActiveWord | null>(null);
   const jobIdRef = useRef(0);
 
   // Voices are empty on the first synchronous getVoices() in Chrome → wire voiceschanged + a 1s fallback.
@@ -80,6 +92,7 @@ export function useSpeech(): UseSpeechResult {
     // Safari does not fire onend after cancel(), so clear state directly.
     setSpeaking(false);
     setActiveChunkIndex(null);
+    setActiveWord(null);
   }, []);
 
   const enqueue = useCallback((items: SpeakItem[], lang: SpeechLang, rate: number) => {
@@ -95,6 +108,7 @@ export function useSpeech(): UseSpeechResult {
     const jobId = (jobIdRef.current += 1);
     setSpeaking(true);
     setActiveChunkIndex(null);
+    setActiveWord(null);
 
     speakable.forEach((item, i) => {
       const utterance = new SpeechSynthesisUtterance(item.speak);
@@ -102,13 +116,28 @@ export function useSpeech(): UseSpeechResult {
       utterance.lang = voice.lang;
       utterance.rate = clampRate(rate);
       utterance.onstart = () => {
-        if (jobId === jobIdRef.current) setActiveChunkIndex(item.index);
+        if (jobId === jobIdRef.current) {
+          setActiveChunkIndex(item.index);
+          setActiveWord(null); // clear the previous chunk's word until this chunk's first boundary
+        }
+      };
+      // Karaoke word tracking. Fires on Chrome + many desktop voices; often silent on Safari/iOS and
+      // offline Thai voices → activeWord just stays null and the sentence highlight remains (fallback).
+      utterance.onboundary = (event) => {
+        if (jobId === jobIdRef.current && event.name === 'word') {
+          setActiveWord({
+            chunkIndex: item.index,
+            charIndex: event.charIndex,
+            charLength: event.charLength ?? 0,
+          });
+        }
       };
       if (i === speakable.length - 1) {
         utterance.onend = () => {
           if (jobId === jobIdRef.current) {
             setSpeaking(false);
             setActiveChunkIndex(null);
+            setActiveWord(null);
           }
         };
       }
@@ -138,6 +167,7 @@ export function useSpeech(): UseSpeechResult {
     englishVoiceAvailable: isOfflineVoiceAvailable(voices, 'en'),
     speaking,
     activeChunkIndex,
+    activeWord,
     speak,
     speakChunk,
     stop,
