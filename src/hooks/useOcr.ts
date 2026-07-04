@@ -120,7 +120,8 @@ export function useOcr(): UseOcrResult {
           if (jobId === jobIdRef.current) handleProgress(info);
         });
         if (jobId !== jobIdRef.current) return;
-        setText(result.text);
+        // Canonicalize (NFC) so any mis-ordered Thai combining marks from OCR normalize before display.
+        setText(result.text.normalize('NFC'));
         setConfidence(result.confidence);
         setProgress(null);
         setStatus('done');
