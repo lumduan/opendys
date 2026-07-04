@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { toColorClusters, THAI_COLORS, type ColorRole } from '@/utils/thai';
+import { THAI_COLORS, type ColorRole } from '@/utils/thai';
 import { buildTextStyle } from '@/utils/latin';
+import { ColorText } from '@/components/reader/ColorText';
 
 const SAMPLE = 'เด็กน้อยอ่านหนังสือ รักษ์ภาษาไทย';
 
@@ -31,8 +32,8 @@ function Swatch({ role, label }: { role: ColorRole; label: string }) {
  */
 export function ThaiColorDemoPage() {
   const [text, setText] = useState(SAMPLE);
-  const clusters = toColorClusters(text);
-  const readerStyle = buildTextStyle({ fontSizePx: 40, lineHeight: 2.4, letterSpacingEm: 0.02 });
+  // Thai letter-spacing MUST stay 0 — tracking detaches combining marks (see ColorText / index.css).
+  const readerStyle = buildTextStyle({ fontSizePx: 40, lineHeight: 2.4, letterSpacingEm: 0 });
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-10">
@@ -58,15 +59,7 @@ export function ThaiColorDemoPage() {
         lang="th"
         className="mt-6 whitespace-pre-wrap break-words rounded-box bg-base-100 p-6 shadow-sm"
       >
-        {clusters.map((cluster, clusterIndex) => (
-          <span key={clusterIndex}>
-            {cluster.tokens.map((token, tokenIndex) => (
-              <span key={tokenIndex} style={{ color: token.color }}>
-                {token.char}
-              </span>
-            ))}
-          </span>
-        ))}
+        <ColorText text={text} palette={THAI_COLORS} />
       </p>
 
       <div className="mt-4 flex flex-wrap gap-4 text-sm">
