@@ -12,7 +12,17 @@ export type ProgressCallback = (info: OcrProgressInfo) => void;
 
 export interface RecognizeResult {
   text: string;
-  confidence: number;
+  /** 0..100 for on-device Tesseract; `null` for cloud engines that report no per-character score. */
+  confidence: number | null;
+}
+
+/** Which OCR engine handles a job: the on-device default, or the opt-in Typhoon cloud fallback. */
+export type OcrEngineKind = 'tesseract' | 'typhoon';
+
+/** Common contract so {@link useOcr} can drive either engine behind one call. */
+export interface OcrEngine {
+  recognize(image: Blob, lang: OcrLanguage, onProgress?: ProgressCallback): Promise<RecognizeResult>;
+  terminate(): Promise<void>;
 }
 
 /**
@@ -24,7 +34,7 @@ export interface RecognizeResult {
  * One instance owns at most one worker. A language change disposes and recreates it. `terminate`
  * is idempotent; after it, the instance is spent (the hook creates a fresh instance).
  */
-export class TesseractClient {
+export class TesseractClient implements OcrEngine {
   private worker: TesseractWorker | null = null;
   private lang: OcrLanguage | null = null;
   private progressCb: ProgressCallback | null = null;

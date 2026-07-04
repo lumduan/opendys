@@ -1,7 +1,9 @@
 # ADR-0001 — 100% Client-Side OCR Architecture
 
 - **Status:** Accepted — refined by [ADR-0004](./ADR-0004-ocr-model-packaging.md) (language-pack
-  format & packaging; the "fast" models are superseded by `4.0.0_best_int`)
+  format & packaging; the "fast" models are superseded by `4.0.0_best_int`); amended by
+  [ADR-0005](./ADR-0005-optional-cloud-ocr-typhoon.md) (zero-egress holds **by default**, but an opt-in
+  "Enhanced Thai OCR (Cloud)" engine may egress one image to Typhoon when the user explicitly enables it)
 - **Date:** 2026-07-03
 
 ## Context

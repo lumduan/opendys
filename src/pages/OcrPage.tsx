@@ -3,15 +3,18 @@ import { Link } from 'react-router-dom';
 import { strings } from '@/i18n/strings';
 import { useOcr } from '@/hooks/useOcr';
 import type { OcrLanguage } from '@/utils/ocr';
+import type { OcrEngineKind } from '@/services/ocr/tesseractClient';
 import { UploadDropzone } from '@/components/ocr/UploadDropzone';
 import { CapturePanel } from '@/components/ocr/CapturePanel';
 import { LanguageSelect } from '@/components/ocr/LanguageSelect';
+import { EngineToggle } from '@/components/ocr/EngineToggle';
 import { OcrProgress } from '@/components/ocr/OcrProgress';
 import { OcrResult } from '@/components/ocr/OcrResult';
 
 export function OcrPage() {
   const t = strings.en.ocr;
   const [language, setLanguage] = useState<OcrLanguage>('eng+tha');
+  const [engine, setEngine] = useState<OcrEngineKind>('tesseract');
   const [source, setSource] = useState<'upload' | 'camera'>('upload');
   const ocr = useOcr();
 
@@ -19,7 +22,7 @@ export function OcrPage() {
   const showInput = ocr.status === 'idle' || ocr.status === 'error';
 
   const handleImage = (file: File | Blob) => {
-    void ocr.recognize(file, language);
+    void ocr.recognize(file, language, engine);
   };
 
   return (
@@ -43,6 +46,10 @@ export function OcrPage() {
       {showInput && (
         <div className="space-y-4">
           <LanguageSelect value={language} onChange={setLanguage} disabled={busy} />
+
+          {ocr.typhoonAvailable && (
+            <EngineToggle value={engine} onChange={setEngine} disabled={busy} />
+          )}
 
           <div role="tablist" className="tabs tabs-boxed w-fit">
             <button

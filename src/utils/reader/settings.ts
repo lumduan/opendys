@@ -37,12 +37,15 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   ttsRate: 1,
 };
 
-/** CSS font-family stacks. OpenDyslexic (Latin) falls through to Sarabun (Thai) via unicode-range. */
+/** CSS font-family stacks. OpenDyslexic (Latin) falls through to Sarabun (Thai) via unicode-range.
+ *  Every stack ends with bundled 'Sarabun' before the generic fallback so that Thai glyphs always land
+ *  on a face with proper mark-to-mark GPOS — even the `system` choice, where the OS may lack a Thai
+ *  font (per-glyph fallback keeps the OS font for Latin and only reaches Sarabun for Thai). */
 export const FONT_STACKS: Record<FontChoice, string> = {
   dyslexic: "'OpenDyslexic', 'Sarabun', system-ui, sans-serif",
   sarabun: "'Sarabun', system-ui, sans-serif",
   mitr: "'Mitr', 'Sarabun', system-ui, sans-serif",
-  system: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+  system: "system-ui, -apple-system, 'Segoe UI', 'Sarabun', sans-serif",
 };
 
 export function fontStackFor(fontChoice: FontChoice): string {

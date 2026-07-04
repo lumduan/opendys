@@ -2,8 +2,8 @@
 
 **A free, 100% client-side dyslexia reading aid for English and Thai.** Capture or paste text, then
 read it in a deeply customizable, dyslexia-friendly interface — with offline OCR, color-coded Thai
-orthography, a reading ruler, and text-to-speech. Everything runs in your browser. Nothing you scan
-or read ever leaves your device.
+orthography, a reading ruler, and text-to-speech. Everything runs in your browser, and **by default
+nothing you scan or read leaves your device** — with one opt-in exception (cloud OCR for hard Thai, below).
 
 [![CI](https://github.com/lumduan/opendys/actions/workflows/ci.yml/badge.svg)](https://github.com/lumduan/opendys/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -22,7 +22,8 @@ tools ignore.
 ## Features
 
 - **Offline OCR** — snap a photo or upload an image; recognize English + Thai text on-device with
-  Tesseract.js. No image is ever uploaded.
+  Tesseract.js. No image is uploaded (an optional [cloud engine](#thai-ocr-enhancement-optional) for
+  hard Thai is off by default).
 - **Thai 4-level color coding** — consonants, vowels, tone marks, and silent finals (การันต์) are
   colored and cued, with an optional **colorblind-safe** palette and a non-color underline for silent
   letters.
@@ -35,10 +36,16 @@ tools ignore.
 
 ## Privacy
 
-opendys is **zero-egress**. There is no backend, no telemetry, and no analytics. The OCR engine,
-language models, and fonts are all **self-hosted** — the app never contacts a third-party server.
-The production build ships a strict Content-Security-Policy whose `connect-src 'self'` makes the
-browser **enforce** this: any attempt to reach an external host is blocked.
+opendys is **private by default — zero-egress**. There is no backend, no telemetry, and no analytics.
+The OCR engine, language models, and fonts are all **self-hosted**, and the production build ships a
+strict Content-Security-Policy whose `connect-src 'self'` makes the browser **enforce** this: the page
+can only talk to its own origin.
+
+The **one exception is opt-in**: if a self-hoster configures the optional
+[Enhanced Thai OCR (Cloud)](#thai-ocr-enhancement-optional) engine, and a user turns it on *and* runs a
+recognition, that one image is sent — server-side, from nginx — to Typhoon for recognition. It is **off
+by default**, the API key never reaches the browser, the `connect-src 'self'` CSP is unchanged, and a
+deployment without a key behaves exactly like the zero-egress default.
 
 ## Quick start
 
@@ -100,6 +107,34 @@ Design decisions and the full roadmap live in [`docs/plans/`](docs/plans/) (HLD,
   front of. Add `Strict-Transport-Security` at that edge (it's intentionally not set in-container).
 - **Add a language**: see [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language) — drop in a Tesseract
   model, add UI strings, and (for a new script) a font.
+
+## Thai OCR Enhancement (Optional)
+
+On-device OCR is private and works offline, but Tesseract struggles with **hard Thai documents** —
+photographed book pages, decorative layouts, low contrast. For those, opendys can optionally use
+**[Typhoon OCR](https://opentyphoon.ai/)**, a Thai-tuned cloud model that is far more accurate on such
+inputs. It is **off by default**; enabling it is a self-hoster choice (see
+[ADR-0005](docs/plans/adr/ADR-0005-optional-cloud-ocr-typhoon.md)).
+
+**Privacy:** when enabled *and* selected by the user, the image for that recognition is sent to Typhoon's
+servers (opentyphoon.ai). The API key is injected **server-side** by nginx and is **never** shipped to
+the browser — safe even on a public deployment. With no key configured, the option never appears and
+opendys stays 100% on-device.
+
+**Setup (self-hosters):**
+
+1. Get a free API key at **https://opentyphoon.ai/** (the free tier covers roughly 150 pages/day).
+2. Put it in your environment as `TYPHOON_API` — e.g. copy `.env.example` to `.env` and set
+   `TYPHOON_API=your-typhoon-api-key`. (`.env` is gitignored and never enters the Docker image — it is
+   read at **runtime** only, and the key is not prefixed `VITE_` precisely so it never reaches the bundle.)
+3. Run the container with that env:
+   ```sh
+   docker run --rm -p 8080:8080 --env-file .env ghcr.io/lumduan/opendys:latest
+   # or:  docker run --rm -p 8080:8080 -e TYPHOON_API=your-key ghcr.io/lumduan/opendys:latest
+   # or:  docker compose --profile prod up --build      # reads .env automatically
+   ```
+4. Reload the app — an **"Enhanced Thai OCR (Cloud)"** toggle appears on the reading screen. Users choose
+   it per image, and a notice reminds them the image leaves the device.
 
 ## Contributing
 

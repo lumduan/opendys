@@ -11,8 +11,11 @@ Cross-references: [FRD](./frd.md) · [WBS](./wbs.md) · [ADR-0001](./adr/ADR-000
 
 ## 2. Architectural Constraints (non-negotiable)
 
-1. **100% client-side.** No backend, no API calls, no telemetry. The build artifact is a static
-   bundle served by any web server. Captured images and recognized text never leave the browser.
+1. **Client-side by default.** No telemetry; the build artifact is a static bundle served by any web
+   server. Captured images and recognized text never leave the browser — with ONE opt-in exception: the
+   "Enhanced Thai OCR (Cloud)" engine (off by default, [ADR-0005](./adr/ADR-0005-optional-cloud-ocr-typhoon.md)),
+   where **nginx** (not the browser) proxies one image to Typhoon with a server-injected key. Even then
+   the browser only ever calls its own origin (`connect-src 'self'`).
 2. **Offline-first.** After the first visit, OCR models, fonts, and the app shell are cached so the
    app runs with no network (Phase 5 PWA).
 3. **Dockerized & reproducible.** Multi-stage build → hardened non-root nginx; dev HMR via compose.
@@ -48,7 +51,8 @@ Cross-references: [FRD](./frd.md) · [WBS](./wbs.md) · [ADR-0001](./adr/ADR-000
 ```
 
 Nothing in this pipeline performs network I/O at runtime except the **one-time** fetch of model and
-font assets, which are then served from the Cache API (Phase 5).
+font assets (then served from the Cache API, Phase 5) and — only when the user opts into cloud OCR — a
+same-origin `POST /api/typhoon-ocr` that nginx proxies to Typhoon server-side (ADR-0005).
 
 ## 4. Component & Module Map
 
@@ -73,8 +77,12 @@ font assets, which are then served from the Cache API (Phase 5).
 ## 6. Privacy & Threat Model
 
 - **Asset:** the user's captured image and recognized text (often a child's schoolwork).
-- **Guarantee:** these never touch the network. Enforced by having no fetch/XHR/WebSocket to any
-  data endpoint; only static same-origin asset loads exist, and those carry no user data.
+- **Guarantee (default):** these never touch the network. Enforced by `connect-src 'self'`: the browser
+  makes no fetch/XHR/WebSocket to any third party; only same-origin loads exist.
+- **Opt-in exception (ADR-0005):** if the deployer sets `TYPHOON_API` and the user enables "Enhanced Thai
+  OCR (Cloud)", that one image is POSTed same-origin to `/api/typhoon-ocr`, which **nginx** forwards to
+  Typhoon with a server-side key. The key never reaches the browser (not `VITE_`-prefixed, injected by
+  envsubst at runtime; `.env` is gitignored + dockerignored); the CSP is unchanged. Off by default.
 - **Residual risks:** third-party CDN egress (mitigated — all models/fonts self-hosted, ADR-0001/2);
   Service Worker cache poisoning (mitigated — same-origin precache only). No cookies, no storage of
   images.

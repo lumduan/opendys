@@ -25,6 +25,11 @@ services:
     image: opendys:latest
     ports:
       - "8080:8080"
+    # Optional: enables the server-side Typhoon cloud OCR proxy. If .env has no (uncommented)
+    # TYPHOON_API, nginx renders an empty key and the cloud path stays off (graceful 503). The key
+    # is injected into nginx server-side — never into the client bundle.
+    env_file:
+      - .env
     restart: unless-stopped
 
 volumes:

@@ -6,6 +6,22 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-07-04
+
+### Added
+
+- **Optional "Enhanced Thai OCR (Cloud)"** — an opt-in [Typhoon](https://opentyphoon.ai/) cloud engine
+  for the hard Thai documents on-device Tesseract struggles with. **Off by default**; the toggle appears
+  only when a `TYPHOON_API` key is configured. The key is injected **server-side** by nginx via a
+  same-origin `/api/typhoon-ocr` proxy — never in the client bundle — so the strict `connect-src 'self'`
+  CSP is unchanged and a deployment without a key stays 100% on-device (ADR-0005). Enabling it and running
+  a recognition sends that one image to Typhoon, with a clear in-app notice.
+
+### Changed
+
+- The reader's **`system` font** choice now falls back to bundled Sarabun for Thai glyphs, so stacked
+  tone-mark + vowel clusters keep correct mark positioning even on systems without a Thai font.
+
 ## [1.1.0] — 2026-07-04
 
 ### Changed
@@ -65,7 +81,8 @@ First public release — a free, 100% client-side, offline dyslexia reading aid 
 - **Engineering system** — `docs/plans/` (ROADMAP, HLD, FRD, WBS, ADRs), GitHub Actions CI
   (lint → typecheck → coverage → build) and a tag-driven GHCR release.
 
-[Unreleased]: https://github.com/lumduan/opendys/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/lumduan/opendys/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/lumduan/opendys/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/lumduan/opendys/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/lumduan/opendys/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/lumduan/opendys/releases/tag/v1.0.0
