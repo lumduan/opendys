@@ -43,11 +43,13 @@ Cross-references: [HLD](./hld.md) · [WBS](./wbs.md) · [ROADMAP](./ROADMAP.md).
 | **FR-09** | Offline TTS via Web Speech API, switching EN/TH voices; tap word or sentence. | Phase 4 |
 | **FR-10** | Installable PWA that runs fully offline after first visit. | Phase 5 |
 | **FR-11** | WCAG AA contrast for text and the 4-level color palette on both themes. | Phase 5 |
-| **FR-12** | No network egress of images or text; no telemetry. | All phases |
+| **FR-12** | No network egress of images or text **by default**; no telemetry. | All phases |
+| **FR-13** | Optional **opt-in** "Enhanced Thai OCR (Cloud)" (Typhoon) for hard Thai — off by default, API key injected **server-side** (never in the bundle); an image egresses only when a user enables it and runs a recognition. | Phase 7 · [ADR-0005](./adr/ADR-0005-optional-cloud-ocr-typhoon.md) |
 
 ## 5. Non-Functional Requirements
 
-- **Privacy:** zero data egress (see HLD §6). **Offline:** works with no connection post-install.
+- **Privacy:** zero data egress **by default** — the sole exception is the opt-in cloud OCR (FR-13,
+  ADR-0005). **Offline:** works with no connection post-install.
 - **Accessibility:** keyboard operable; screen-reader labelled; respects `prefers-reduced-motion`.
 - **Performance:** OCR runs off the main thread; UI stays responsive during recognition.
 - **Portability:** anyone can self-host their own instance via Docker.

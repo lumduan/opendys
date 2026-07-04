@@ -18,6 +18,8 @@ export interface OcrStrings {
   readonly langAuto: string;
   readonly tabUpload: string;
   readonly tabCamera: string;
+  readonly engineToggle: string;
+  readonly engineCloudNotice: string;
   readonly upload: {
     readonly label: string;
     readonly hint: string;
@@ -54,6 +56,10 @@ export interface OcrStrings {
     readonly invalidFile: string;
     readonly modelMissing: string;
     readonly recognizeFailed: string;
+    readonly cloudNotConfigured: string;
+    readonly cloudAuth: string;
+    readonly cloudRateLimit: string;
+    readonly cloudFailed: string;
   };
 }
 
@@ -141,6 +147,9 @@ export const strings: Record<Language, UIStrings> = {
       langAuto: 'Auto (English + Thai)',
       tabUpload: 'Upload',
       tabCamera: 'Camera',
+      engineToggle: 'Enhanced Thai OCR (Cloud)',
+      engineCloudNotice:
+        'This sends your image to Typhoon (opentyphoon.ai) for recognition — it leaves your device. On-device OCR stays private.',
       upload: {
         label: 'Choose an image',
         hint: 'Drag an image here, or choose a file (PNG, JPG, WebP, GIF, BMP).',
@@ -175,6 +184,11 @@ export const strings: Record<Language, UIStrings> = {
         invalidFile: 'That file type is not supported. Please use a PNG, JPG, WebP, GIF, or BMP image.',
         modelMissing: 'A language model could not be loaded. Please rebuild the app assets and try again.',
         recognizeFailed: 'Something went wrong while reading the image. Please try again.',
+        cloudNotConfigured:
+          'Cloud OCR is not set up on this server. Add a TYPHOON_API key, or use on-device OCR.',
+        cloudAuth: 'Cloud OCR rejected the API key. Check the server’s TYPHOON_API key.',
+        cloudRateLimit: 'Cloud OCR is rate-limited right now. Please wait a moment and try again.',
+        cloudFailed: 'Cloud OCR could not be reached. Check your connection, or use on-device OCR.',
       },
     },
     reader: {
@@ -248,6 +262,9 @@ export const strings: Record<Language, UIStrings> = {
       langAuto: 'อัตโนมัติ (ไทย + อังกฤษ)',
       tabUpload: 'อัปโหลด',
       tabCamera: 'กล้อง',
+      engineToggle: 'OCR ภาษาไทยแม่นยำสูง (คลาวด์)',
+      engineCloudNotice:
+        'จะส่งรูปภาพของคุณไปยัง Typhoon (opentyphoon.ai) เพื่ออ่านข้อความ — ข้อมูลจะออกจากอุปกรณ์ ส่วน OCR บนเครื่องยังเป็นส่วนตัว',
       upload: {
         label: 'เลือกรูปภาพ',
         hint: 'ลากรูปมาที่นี่ หรือเลือกไฟล์ (PNG, JPG, WebP, GIF, BMP)',
@@ -282,6 +299,11 @@ export const strings: Record<Language, UIStrings> = {
         invalidFile: 'ไม่รองรับไฟล์ชนิดนี้ กรุณาใช้รูป PNG, JPG, WebP, GIF หรือ BMP',
         modelMissing: 'โหลดโมเดลภาษาไม่สำเร็จ กรุณาสร้างไฟล์แอปใหม่แล้วลองอีกครั้ง',
         recognizeFailed: 'เกิดข้อผิดพลาดขณะอ่านรูปภาพ กรุณาลองใหม่อีกครั้ง',
+        cloudNotConfigured:
+          'เซิร์ฟเวอร์นี้ยังไม่ได้ตั้งค่า OCR แบบคลาวด์ กรุณาเพิ่มคีย์ TYPHOON_API หรือใช้ OCR บนเครื่อง',
+        cloudAuth: 'OCR แบบคลาวด์ปฏิเสธคีย์ API กรุณาตรวจสอบคีย์ TYPHOON_API ของเซิร์ฟเวอร์',
+        cloudRateLimit: 'OCR แบบคลาวด์ถูกจำกัดอัตราการใช้งานอยู่ กรุณารอสักครู่แล้วลองใหม่',
+        cloudFailed: 'ไม่สามารถเชื่อมต่อ OCR แบบคลาวด์ได้ กรุณาตรวจสอบการเชื่อมต่อ หรือใช้ OCR บนเครื่อง',
       },
     },
     reader: {

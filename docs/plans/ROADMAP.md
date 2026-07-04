@@ -150,6 +150,28 @@ working under the hardened CSP with zero external requests._
 
 ---
 
+## Phase 7 — Post-1.0: Thai fidelity, OCR quality & optional cloud OCR
+
+> Goal: Fix real-world Thai issues found in production testing, and add an opt-in accuracy escalation
+> for the hardest documents — without giving up the private, offline default.
+
+- [x] **v1.0.1** — Thai tone-mark render fix: color **per grapheme cluster** so combining marks stay
+      attached to their base (no more dotted circles); NFC-normalize OCR output. (ADR-0003 render model.)
+- [x] **v1.1.0** — on-device Thai OCR tuning: **upscale small images** (the prep was downscale-only) +
+      AUTO page segmentation (PSM 3) + `preserve_interword_spaces`/`user_defined_dpi`. Verify-first
+      finding: float `tessdata_best` models crash the tesseract.js WASM core → keep `4.0.0_best_int`.
+- [x] **v1.2.0** — optional **opt-in Typhoon cloud OCR** for hard Thai: same-origin `/api/typhoon-ocr`
+      nginx proxy injecting a **server-side** `TYPHOON_API` key (off by default; key never in the bundle;
+      `connect-src 'self'` unchanged; no key ⇒ graceful 503 / 100% on-device). "Enhanced Thai OCR (Cloud)"
+      toggle + `/api/ocr-capabilities` probe + explicit notice; `system`-font Thai stacking hardening;
+      docs reconciled ([ADR-0005](./adr/ADR-0005-optional-cloud-ocr-typhoon.md)).
+
+**Exit criteria:** Thai renders correctly on stacked marks; on-device OCR improved on document photos;
+cloud OCR opt-in verified end-to-end (proxy forwards with the server-side key → Typhoon; no key ⇒ 503,
+site stays fully static/private).
+
+---
+
 ## Dependency Map
 
 ```
@@ -178,12 +200,13 @@ Phase 3 (OCR) depends only on Phase 0 and can proceed in parallel with Phase 2; 
 
 ## Current Status
 
-- **Active phase:** — (all planned phases complete)
-- **Completed:** Phases 0–6 — bootstrap, docs, engine, offline OCR, reading UI, PWA + a11y, and the
-  hardened, documented **v1.0.0** release.
-- **Released:** `v1.0.0` → `ghcr.io/lumduan/opendys:v1.0.0` + `:latest` (public); GitHub Release
-  published; CI + Release workflows green.
+- **Active phase:** Phase 7 (post-1.0 OCR quality & optional cloud) — shipping incrementally.
+- **Completed:** Phases 0–6 (**v1.0.0**) + Phase 7 to date — **v1.0.1** (Thai render fix), **v1.1.0**
+  (on-device OCR tuning), **v1.2.0** (opt-in Typhoon cloud OCR).
+- **Released:** `v1.0.0` → `v1.2.0` on `ghcr.io/lumduan/opendys` (`:latest` = newest, public); GitHub
+  Releases published; CI + Release workflows green.
 - **Manual/device checks remaining:** Lighthouse PWA+a11y, real EN/TH TTS audio on-device, camera
-  capture, true airplane-mode OCR (needs one online recognition first — models are runtime-cached).
+  capture, true airplane-mode OCR (needs one online recognition first — models are runtime-cached); a
+  live Typhoon **200** with a real key (dummy-key wiring verified in CI/local).
 - **Future ideas** live in Phase 8 / RFCs (e.g. more languages, model-precache toggle, dark theme with
   theme-aware Thai colors).
