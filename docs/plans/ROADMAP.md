@@ -165,6 +165,11 @@ working under the hardened CSP with zero external requests._
       `connect-src 'self'` unchanged; no key ⇒ graceful 503 / 100% on-device). "Enhanced Thai OCR (Cloud)"
       toggle + `/api/ocr-capabilities` probe + explicit notice; `system`-font Thai stacking hardening;
       docs reconciled ([ADR-0005](./adr/ADR-0005-optional-cloud-ocr-typhoon.md)).
+- [x] **v1.3.0** — reader UX: **granular per-category Thai coloring** (upper vowel / lower vowel / tone /
+      silent each a distinct color, applied per grapheme cluster → layout-safe on Safari/iOS + Chrome) +
+      **karaoke** word highlight during Read-Aloud (Web Speech `onboundary` → CSS Custom Highlight API,
+      with a graceful sentence-highlight fallback on iOS Safari).
+      [ADR-0006](./adr/ADR-0006-granular-thai-coloring-and-karaoke-tts.md).
 
 **Exit criteria:** Thai renders correctly on stacked marks; on-device OCR improved on document photos;
 cloud OCR opt-in verified end-to-end (proxy forwards with the server-side key → Typhoon; no key ⇒ 503,

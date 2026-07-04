@@ -1,22 +1,31 @@
 import { classifyThaiChar, type ThaiCategory, type ThaiLevel } from './classify';
 import { segmentGraphemes, segmentThaiSyllables } from './cluster';
 import { clusterHasKaran } from './karan';
-import { codePointOf } from './thaiChars';
+import { codePointOf, isToneMark, isUpperMark, isLowerMark } from './thaiChars';
 
-/** The four color roles of the FR-3 structural parsing model. */
-export type ColorRole = 'consonant' | 'vowel' | 'tone' | 'silent' | 'neutral';
+/** Structural color roles. Spacing vowels (leading เ / following า) share `vowel`; the above/below
+ *  combining vowels and tone marks get their OWN roles so each category reads distinctly. */
+export type ColorRole =
+  | 'consonant'
+  | 'vowel'
+  | 'upperVowel'
+  | 'lowerVowel'
+  | 'tone'
+  | 'silent'
+  | 'neutral';
 
 /**
- * Default ("classic") FR-3 palette. Reader text is large, so the governing threshold is WCAG
- * **AA-large 3:1**, which all four clear on cupcake + pastel (audited in Phase 5; classic tone-green
- * is 4.42:1 = AA-large, just under AA-normal 4.5:1). The red/green pair is colorblind-confusable, so
- * a colorblind-safe alternative + a non-color underline cue live in `@/utils/reader/palette` and are
- * applied at render time (ColorText).
- *  - consonant → charcoal   - vowel → red   - tone → green   - silent/final → blue
+ * Default ("classic") palette. Reader text is large, so the governing threshold is WCAG **AA-large
+ * 3:1** on cupcake + pastel (codified in `palette.test.ts` / `contrast.test.ts`). A colorblind-safe
+ * (Okabe-Ito) variant + a non-color underline cue for silents live in `@/utils/reader/palette`.
+ *  - consonant → charcoal · vowel (spacing) → red · upper vowel → purple · lower vowel → dark orange
+ *  · tone → green · silent/final → blue
  */
 export const THAI_COLORS: Record<ColorRole, string> = {
   consonant: '#2c3e50',
   vowel: '#c0392b',
+  upperVowel: '#8e44ad',
+  lowerVowel: '#b45309',
   tone: '#1e8449',
   silent: '#1f618d',
   neutral: 'currentColor',
@@ -45,9 +54,11 @@ function roleForCategory(category: ThaiCategory): ColorRole {
       return 'consonant';
     case 'leadingVowel':
     case 'followingVowel':
-    case 'upperVowel':
-    case 'lowerVowel':
       return 'vowel';
+    case 'upperVowel':
+      return 'upperVowel';
+    case 'lowerVowel':
+      return 'lowerVowel';
     case 'toneMark':
       return 'tone';
     case 'karan':
@@ -106,19 +117,29 @@ export interface RenderSegment {
 
 /**
  * Choose the single color role for a whole grapheme cluster. Coloring at cluster granularity is
- * mandatory for correctness: a Thai nonspacing mark (tone / upper-lower vowel / karan) placed in its
- * own colored element detaches from its base and the shaper renders it on a dotted circle. So a base
- * consonant and its stacked marks must share one element — hence one color.
+ * MANDATORY: a Thai nonspacing mark (tone / upper-lower vowel / karan) placed in its OWN colored
+ * element detaches from its base onto a dotted circle on WebKit/Safari (Blink tolerates it, WebKit
+ * does not — see ADR-0006). So a base + its stacked marks share one span, hence one color.
  *
- * Rule (Option A, "faithful"): color by the cluster's base/spacing character — consonant, spacing
- * vowel (leading เ / following า), Thai digit, or other — promoted to `silent` (blue) when the cluster
- * carries a karan (◌์). To instead surface a stacked mark's own color (Option B, "tint the syllable":
- * a cluster with a tone mark → green, with a stacked vowel → red), return the mark's role here.
+ * To keep each category visually distinct within that constraint, the cluster is colored by its MOST
+ * SALIENT mark — priority `silent (karan) > tone > upper vowel > lower vowel` — falling back to the
+ * base/spacing character's own role (consonant, spacing vowel, digit/other).
  */
 export function segmentRole(cluster: string): ColorRole {
-  const role = roleForCategory(classifyThaiChar(codePointOf(cluster)).category);
-  if (role === 'consonant' && clusterHasKaran(cluster)) return 'silent';
-  return role;
+  if (clusterHasKaran(cluster)) return 'silent';
+  let hasTone = false;
+  let hasUpper = false;
+  let hasLower = false;
+  for (const ch of cluster) {
+    const cp = codePointOf(ch);
+    if (isToneMark(cp)) hasTone = true;
+    else if (isUpperMark(cp)) hasUpper = true;
+    else if (isLowerMark(cp)) hasLower = true;
+  }
+  if (hasTone) return 'tone';
+  if (hasUpper) return 'upperVowel';
+  if (hasLower) return 'lowerVowel';
+  return roleForCategory(classifyThaiChar(codePointOf(cluster)).category);
 }
 
 /**

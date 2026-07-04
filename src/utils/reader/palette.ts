@@ -15,9 +15,11 @@ export const PALETTES: Record<PaletteName, Record<ColorRole, string>> = {
   classic: THAI_COLORS,
   colorblind: {
     consonant: '#333333',
-    vowel: '#d55e00', // Okabe-Ito vermilion
+    vowel: '#d55e00', // Okabe-Ito vermilion (spacing vowels)
+    upperVowel: '#009e73', // Okabe-Ito bluish green (above the line)
+    lowerVowel: '#785ef0', // IBM/Tol violet (below the line — also spatially separated from tone)
     tone: '#0072b2', // Okabe-Ito blue
-    silent: '#aa3377', // Paul Tol magenta
+    silent: '#aa3377', // Paul Tol magenta (+ underline cue)
     neutral: 'currentColor',
   },
 };

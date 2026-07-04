@@ -4,7 +4,7 @@ import { contrastRatio } from './contrast';
 
 // Binding backgrounds: DaisyUI cupcake base-100 (the harder case) and pastel base-100.
 const BACKGROUNDS = ['#faf7f5', '#ffffff'];
-const ROLES = ['consonant', 'vowel', 'tone', 'silent'] as const; // neutral = currentColor
+const ROLES = ['consonant', 'vowel', 'upperVowel', 'lowerVowel', 'tone', 'silent'] as const; // neutral = currentColor
 
 describe('reader palettes', () => {
   it('exposes classic + colorblind with a hex per role', () => {

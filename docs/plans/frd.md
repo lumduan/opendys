@@ -45,6 +45,8 @@ Cross-references: [HLD](./hld.md) · [WBS](./wbs.md) · [ROADMAP](./ROADMAP.md).
 | **FR-11** | WCAG AA contrast for text and the 4-level color palette on both themes. | Phase 5 |
 | **FR-12** | No network egress of images or text **by default**; no telemetry. | All phases |
 | **FR-13** | Optional **opt-in** "Enhanced Thai OCR (Cloud)" (Typhoon) for hard Thai — off by default, API key injected **server-side** (never in the bundle); an image egresses only when a user enables it and runs a recognition. | Phase 7 · [ADR-0005](./adr/ADR-0005-optional-cloud-ocr-typhoon.md) |
+| **FR-14** | Thai color-coding distinguishes **6 categories** — consonant, spacing vowel, **upper vowel**, **lower vowel**, tone mark, silent final — each a distinct AA-large color applied per grapheme cluster (layout-safe on Safari/iOS + Chrome). | Phase 7 · [ADR-0006](./adr/ADR-0006-granular-thai-coloring-and-karaoke-tts.md) |
+| **FR-15** | Read-Aloud highlights the **spoken word** in real time (Web Speech `onboundary` → CSS Custom Highlight API), gracefully falling back to the sentence highlight where word boundaries / the API are unavailable (e.g. iOS Safari). | Phase 7 · [ADR-0006](./adr/ADR-0006-granular-thai-coloring-and-karaoke-tts.md) |
 
 ## 5. Non-Functional Requirements
 

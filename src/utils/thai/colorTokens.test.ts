@@ -8,12 +8,12 @@ import {
 } from './colorTokens';
 
 describe('toColorTokens', () => {
-  it('colors consonant, vowel and tone in กิ่', () => {
+  it('colors consonant, upper vowel and tone in กิ่', () => {
     const tokens = toColorTokens('กิ่');
-    expect(tokens.map((t) => t.role)).toEqual(['consonant', 'vowel', 'tone']);
+    expect(tokens.map((t) => t.role)).toEqual(['consonant', 'upperVowel', 'tone']);
     expect(tokens.map((t) => t.color)).toEqual([
       THAI_COLORS.consonant,
-      THAI_COLORS.vowel,
+      THAI_COLORS.upperVowel,
       THAI_COLORS.tone,
     ]);
     // one visual cluster
@@ -24,7 +24,7 @@ describe('toColorTokens', () => {
     const tokens = toColorTokens('รักษ์');
     const byChar = (c: string) => tokens.find((t) => t.char === c)!;
     expect(byChar('ร').role).toBe('consonant');
-    expect(byChar('ั').role).toBe('vowel');
+    expect(byChar('ั').role).toBe('upperVowel'); // sara a sits above → upperVowel
     expect(byChar('ก').role).toBe('consonant');
     expect(byChar('ษ').role).toBe('silent');
     expect(byChar('์').role).toBe('silent');
@@ -65,21 +65,22 @@ describe('toRenderSegments', () => {
     const segs = toRenderSegments('เด็กน้อย');
     // The tone/upper marks (็ ้) stay glued to their base consonant — never a lone segment.
     expect(segs.map((s) => s.text)).toEqual(['เ', 'ด็', 'ก', 'น้', 'อ', 'ย']);
+    // Each cluster is colored by its salient mark: ด็ (upper), น้ (tone); bare consonants stay charcoal.
     expect(segs.map((s) => s.role)).toEqual([
-      'vowel',
-      'consonant',
-      'consonant',
-      'consonant',
-      'consonant',
-      'consonant',
+      'vowel', // เ
+      'upperVowel', // ด็
+      'consonant', // ก
+      'tone', // น้
+      'consonant', // อ
+      'consonant', // ย
     ]);
   });
 
-  it('colors a karan cluster silent and spacing vowels red (รักษ์, กา)', () => {
+  it('colors a karan cluster silent, upper-vowel clusters distinctly, spacing vowels red (รักษ์, กา)', () => {
     expect(toRenderSegments('รักษ์').map((s) => ({ text: s.text, role: s.role }))).toEqual([
-      { text: 'รั', role: 'consonant' },
+      { text: 'รั', role: 'upperVowel' }, // sara a above ร
       { text: 'ก', role: 'consonant' },
-      { text: 'ษ์', role: 'silent' },
+      { text: 'ษ์', role: 'silent' }, // karan
     ]);
     expect(toRenderSegments('กา').map((s) => s.role)).toEqual(['consonant', 'vowel']);
   });
@@ -95,9 +96,12 @@ describe('toRenderSegments', () => {
 });
 
 describe('segmentRole', () => {
-  it('is faithful: the base/spacing char decides the color, karan → silent', () => {
-    expect(segmentRole('ด็')).toBe('consonant'); // base consonant + upper-vowel mark
-    expect(segmentRole('น้')).toBe('consonant'); // base consonant + tone mark
+  it('colors a cluster by its most-salient mark (priority silent > tone > upper > lower > base)', () => {
+    expect(segmentRole('ด็')).toBe('upperVowel'); // mai taikhu ็ sits above
+    expect(segmentRole('น้')).toBe('tone'); // tone mark ้
+    expect(segmentRole('กุ')).toBe('lowerVowel'); // sara u ุ below
+    expect(segmentRole('กี่')).toBe('tone'); // upper ี + tone ่ → tone wins
+    expect(segmentRole('ก')).toBe('consonant'); // bare consonant
     expect(segmentRole('เ')).toBe('vowel'); // leading vowel (spacing)
     expect(segmentRole('า')).toBe('vowel'); // following vowel (spacing)
     expect(segmentRole('ษ์')).toBe('silent'); // karan-silenced consonant
