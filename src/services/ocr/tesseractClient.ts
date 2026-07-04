@@ -51,7 +51,7 @@ export class TesseractClient {
       this.lang = null;
     }
 
-    const { createWorker, OEM } = await import('tesseract.js');
+    const { createWorker, OEM, PSM } = await import('tesseract.js');
     const paths = buildOcrAssetPaths();
     const worker = await createWorker(resolveLangString(lang), OEM.LSTM_ONLY, {
       workerPath: paths.workerPath,
@@ -62,6 +62,16 @@ export class TesseractClient {
       logger: (message: LoggerMessage) => {
         this.progressCb?.(mapTesseractProgress(message));
       },
+    });
+
+    // Tuning for document photos (measured on real Thai pages): AUTO page segmentation handles
+    // multi-region/decorated pages far better than tesseract.js's default single-block, cutting the
+    // garbage that headers/borders otherwise produce; keep phrase spaces (Thai has no intra-word
+    // spaces but spaces between clauses) and declare the DPI our prep targets.
+    await worker.setParameters({
+      tessedit_pageseg_mode: PSM.AUTO,
+      preserve_interword_spaces: '1',
+      user_defined_dpi: '300',
     });
 
     this.worker = worker;
