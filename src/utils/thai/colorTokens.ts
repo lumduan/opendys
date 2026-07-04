@@ -1,5 +1,5 @@
 import { classifyThaiChar, type ThaiCategory, type ThaiLevel } from './classify';
-import { segmentThaiSyllables } from './cluster';
+import { segmentGraphemes, segmentThaiSyllables } from './cluster';
 import { clusterHasKaran } from './karan';
 import { codePointOf } from './thaiChars';
 
@@ -93,4 +93,40 @@ export function toColorClusters(text: string): ColorCluster[] {
     cluster.tokens.push(token);
   }
   return clusters;
+}
+
+/**
+ * A single render segment: one grapheme cluster (a base character plus any nonspacing marks that
+ * stack onto it) or one spacing glyph, carrying the ONE color role the whole segment is drawn in.
+ */
+export interface RenderSegment {
+  text: string;
+  role: ColorRole;
+}
+
+/**
+ * Choose the single color role for a whole grapheme cluster. Coloring at cluster granularity is
+ * mandatory for correctness: a Thai nonspacing mark (tone / upper-lower vowel / karan) placed in its
+ * own colored element detaches from its base and the shaper renders it on a dotted circle. So a base
+ * consonant and its stacked marks must share one element — hence one color.
+ *
+ * Rule (Option A, "faithful"): color by the cluster's base/spacing character — consonant, spacing
+ * vowel (leading เ / following า), Thai digit, or other — promoted to `silent` (blue) when the cluster
+ * carries a karan (◌์). To instead surface a stacked mark's own color (Option B, "tint the syllable":
+ * a cluster with a tone mark → green, with a stacked vowel → red), return the mark's role here.
+ */
+export function segmentRole(cluster: string): ColorRole {
+  const role = roleForCategory(classifyThaiChar(codePointOf(cluster)).category);
+  if (role === 'consonant' && clusterHasKaran(cluster)) return 'silent';
+  return role;
+}
+
+/**
+ * The DOM-safe render model for {@link ColorText}: one {@link RenderSegment} per grapheme cluster
+ * (from {@link segmentGraphemes}), so a base and its combining marks always render in a single
+ * shaping run. Contrast {@link toColorTokens}, which splits every code point for analysis/tests and
+ * must NOT drive the DOM (it detaches Thai marks onto dotted circles).
+ */
+export function toRenderSegments(text: string): RenderSegment[] {
+  return segmentGraphemes(text).map((cluster) => ({ text: cluster, role: segmentRole(cluster) }));
 }

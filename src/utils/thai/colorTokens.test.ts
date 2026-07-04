@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { toColorTokens, toColorClusters, THAI_COLORS } from './colorTokens';
+import {
+  toColorTokens,
+  toColorClusters,
+  toRenderSegments,
+  segmentRole,
+  THAI_COLORS,
+} from './colorTokens';
 
 describe('toColorTokens', () => {
   it('colors consonant, vowel and tone in กิ่', () => {
@@ -51,5 +57,50 @@ describe('toColorClusters', () => {
     const clusters = toColorClusters('เกา'); // เ+ก merged, า separate
     expect(clusters.map((c) => c.text)).toEqual(['เก', 'า']);
     expect(clusters[0].tokens).toHaveLength(2);
+  });
+});
+
+describe('toRenderSegments', () => {
+  it('emits one segment per grapheme cluster, keeping marks with their base (เด็กน้อย)', () => {
+    const segs = toRenderSegments('เด็กน้อย');
+    // The tone/upper marks (็ ้) stay glued to their base consonant — never a lone segment.
+    expect(segs.map((s) => s.text)).toEqual(['เ', 'ด็', 'ก', 'น้', 'อ', 'ย']);
+    expect(segs.map((s) => s.role)).toEqual([
+      'vowel',
+      'consonant',
+      'consonant',
+      'consonant',
+      'consonant',
+      'consonant',
+    ]);
+  });
+
+  it('colors a karan cluster silent and spacing vowels red (รักษ์, กา)', () => {
+    expect(toRenderSegments('รักษ์').map((s) => ({ text: s.text, role: s.role }))).toEqual([
+      { text: 'รั', role: 'consonant' },
+      { text: 'ก', role: 'consonant' },
+      { text: 'ษ์', role: 'silent' },
+    ]);
+    expect(toRenderSegments('กา').map((s) => s.role)).toEqual(['consonant', 'vowel']);
+  });
+
+  it('keeps a stacked upper-vowel + tone attached to the base (เกี่ยว)', () => {
+    expect(toRenderSegments('เกี่ยว').map((s) => s.text)).toEqual(['เ', 'กี่', 'ย', 'ว']);
+  });
+
+  it('treats digits/Latin as neutral and returns [] for empty input', () => {
+    expect(toRenderSegments('A๕').map((s) => s.role)).toEqual(['neutral', 'neutral']);
+    expect(toRenderSegments('')).toEqual([]);
+  });
+});
+
+describe('segmentRole', () => {
+  it('is faithful: the base/spacing char decides the color, karan → silent', () => {
+    expect(segmentRole('ด็')).toBe('consonant'); // base consonant + upper-vowel mark
+    expect(segmentRole('น้')).toBe('consonant'); // base consonant + tone mark
+    expect(segmentRole('เ')).toBe('vowel'); // leading vowel (spacing)
+    expect(segmentRole('า')).toBe('vowel'); // following vowel (spacing)
+    expect(segmentRole('ษ์')).toBe('silent'); // karan-silenced consonant
+    expect(segmentRole('๕')).toBe('neutral'); // Thai digit
   });
 });

@@ -6,6 +6,17 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-07-04
+
+### Fixed
+
+- **Thai tone marks no longer detach onto dotted circles in the color-coded reader.** The 4-level
+  color engine rendered every Thai combining mark (tone marks ◌่ ◌้ ◌๊ ◌๋, above/below vowels, and
+  การันต์ ◌์) in its own element, which separated it from its base consonant so the browser drew it
+  on a dotted-circle placeholder. Coloring is now applied per grapheme cluster, so a base consonant
+  and its stacked marks stay in a single shaping run and render correctly. Recognized OCR text is
+  also NFC-normalized before display.
+
 ### Changed
 
 - **Improved on-device Thai OCR (document photos).** Image prep now scales toward the recognizer's
@@ -49,5 +60,6 @@ First public release — a free, 100% client-side, offline dyslexia reading aid 
 - **Engineering system** — `docs/plans/` (ROADMAP, HLD, FRD, WBS, ADRs), GitHub Actions CI
   (lint → typecheck → coverage → build) and a tag-driven GHCR release.
 
-[Unreleased]: https://github.com/lumduan/opendys/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/lumduan/opendys/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/lumduan/opendys/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/lumduan/opendys/releases/tag/v1.0.0
