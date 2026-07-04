@@ -6,6 +6,18 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-07-04
+
+### Changed
+
+- **Improved on-device Thai OCR (document photos).** Image prep now scales toward the recognizer's
+  resolution sweet spot — **upscaling small crops** (previously it only ever downscaled, starving tiny
+  Thai tone marks/vowels) and raising the downscale cap to ~3500 px — with high-quality canvas
+  resampling. Recognition uses **AUTO page segmentation (PSM 3)** + `preserve_interword_spaces` +
+  `user_defined_dpi`, which cuts the garbage that decorative headers/borders produced (measured: fewer
+  noise lines, higher confidence on a real Thai page). Still the `4.0.0_best_int` model — the float
+  `tessdata_best` models crash the tesseract.js WASM core (`missing DotProductSSE`).
+
 ## [1.0.1] — 2026-07-04
 
 ### Fixed
@@ -19,13 +31,6 @@ All notable changes to opendys are documented here. The format follows
 
 ### Changed
 
-- **Improved on-device Thai OCR (document photos).** Image prep now scales toward the recognizer's
-  resolution sweet spot — **upscaling small crops** (previously it only ever downscaled, starving tiny
-  Thai tone marks/vowels) and raising the downscale cap to ~3500 px — with high-quality canvas
-  resampling. Recognition uses **AUTO page segmentation (PSM 3)** + `preserve_interword_spaces` +
-  `user_defined_dpi`, which cuts the garbage that decorative headers/borders produced (measured: fewer
-  noise lines, higher confidence on a real Thai page). Still the `4.0.0_best_int` model — the float
-  `tessdata_best` models crash the tesseract.js WASM core (`missing DotProductSSE`).
 - Migrated linting to **ESLint 9 flat config** (`eslint.config.js`): unified `typescript-eslint`,
   `eslint-plugin-react-hooks` v5, and `eslint-plugin-react-refresh` 0.5.
 - Bumped the CI/Release GitHub Actions to their Node-24 runtimes and the Docker build stage +
@@ -60,6 +65,7 @@ First public release — a free, 100% client-side, offline dyslexia reading aid 
 - **Engineering system** — `docs/plans/` (ROADMAP, HLD, FRD, WBS, ADRs), GitHub Actions CI
   (lint → typecheck → coverage → build) and a tag-driven GHCR release.
 
-[Unreleased]: https://github.com/lumduan/opendys/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/lumduan/opendys/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/lumduan/opendys/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/lumduan/opendys/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/lumduan/opendys/releases/tag/v1.0.0
