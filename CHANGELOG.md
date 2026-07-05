@@ -6,6 +6,28 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-07-05
+
+### Added
+
+- **Real-time ASR reading assessment — "Practice Reading" (ฝึกอ่านออกเสียง).** A new opt-in practice
+  mode in the reader: press **Practice Reading** on any snippet (an OCR result or manually typed text),
+  read it aloud, and each word (English) or syllable (Thai) is graded **green** (read correctly) /
+  **red** (skipped or mispronounced) / **neutral** (not yet reached) in real time, alongside a running
+  accuracy score and a missed-words list. Speech recognition uses the opt-in
+  [Typhoon](https://opentyphoon.ai/) ASR cloud through a same-origin `/api/typhoon-asr` proxy that
+  injects the **server-side** `TYPHOON_API` key — never in the client bundle — so the strict
+  `connect-src 'self'` CSP is unchanged and a deployment without a key never shows the feature (**off by
+  default**). A consent notice is shown while practicing (audio only leaves the device during a session),
+  and results are stored **on-device** (`opendys.asr.v1`). Microphone audio is captured as WAV via a
+  self-hosted AudioWorklet ([ADR-0007](docs/plans/adr/ADR-0007-optional-cloud-asr-and-microphone.md)).
+
+### Changed
+
+- The hardened `Permissions-Policy` now allows **`microphone=(self)`** (previously disabled) so the
+  opt-in Practice mode can access the microphone. Nothing else changed — the mic is used only during a
+  practice session, and camera and all other features are unaffected.
+
 ## [1.3.0] — 2026-07-04
 
 ### Added
