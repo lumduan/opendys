@@ -81,6 +81,11 @@ export interface AsrStrings {
   readonly accuracyLabel: string;
   readonly mispronouncedLabel: string;
   readonly homeLink: string;
+  readonly modeWhole: string;
+  readonly modeGuided: string;
+  readonly skip: string;
+  readonly progress: string;
+  readonly guidedDone: string;
   // keys align with AsrErrorKey (src/hooks/useAsr.ts)
   readonly errors: {
     readonly unsupported: string;
@@ -242,6 +247,11 @@ export const strings: Record<Language, UIStrings> = {
       accuracyLabel: 'Accuracy',
       mispronouncedLabel: 'Missed or mispronounced',
       homeLink: '← Home',
+      modeWhole: 'Whole passage',
+      modeGuided: 'Word by word',
+      skip: 'Skip',
+      progress: 'Word',
+      guidedDone: '🎉 Great — you read every word!',
       errors: {
         unsupported:
           'This browser cannot record audio (MediaRecorder or microphone access is unavailable).',
@@ -389,6 +399,11 @@ export const strings: Record<Language, UIStrings> = {
       accuracyLabel: 'ความแม่นยำ',
       mispronouncedLabel: 'คำที่ข้ามหรืออ่านผิด',
       homeLink: '← หน้าแรก',
+      modeWhole: 'ทั้งย่อหน้า',
+      modeGuided: 'ทีละคำ',
+      skip: 'ข้าม',
+      progress: 'คำที่',
+      guidedDone: '🎉 เยี่ยม! อ่านครบทุกคำแล้ว',
       errors: {
         unsupported: 'เบราว์เซอร์นี้ไม่สามารถบันทึกเสียงได้ (ไม่มี MediaRecorder หรือการเข้าถึงไมโครโฟน)',
         micDenied: 'การเข้าถึงไมโครโฟนถูกปฏิเสธ กรุณาอนุญาตแล้วลองใหม่อีกครั้ง',

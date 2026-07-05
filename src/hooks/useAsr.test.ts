@@ -191,4 +191,53 @@ describe('useAsr', () => {
     expect(result.current.evaluation).toBeNull();
     expect(result.current.hypothesis).toBe('');
   });
+
+  // Guided mode flushes on a pause (VAD) rather than a timer: feed a "speech" frame then a long
+  // "silence" frame (~666 ms > the 600 ms threshold) to trigger one utterance flush.
+  const sayThenPause = (transcript: string) => {
+    transcribeMock.mockResolvedValueOnce({ text: transcript });
+    MockAudioWorkletNode.last?.feed(new Float32Array(1600).fill(0.1)); // speech (rms 0.1)
+    MockAudioWorkletNode.last?.feed(new Float32Array(32000)); // ~666 ms silence → flush
+  };
+
+  it('guided mode advances the cursor one word at a time', async () => {
+    const { result } = renderHook(() => useAsr());
+    await act(async () => {
+      await result.current.start('the cat', 'en', 'guided');
+    });
+    expect(result.current.mode).toBe('guided');
+    expect(result.current.status).toBe('recording');
+
+    await act(async () => {
+      sayThenPause('the'); // read only the first word
+      await flush();
+    });
+    expect(result.current.evaluation?.frontier).toBe(1); // cursor moved past "the", waits on "cat"
+    expect(result.current.evaluation?.status[0]).toBe('correct');
+    expect(result.current.status).toBe('recording'); // not finished
+  });
+
+  it('guided mode auto-finishes and exposes a session at the last word', async () => {
+    const { result } = renderHook(() => useAsr());
+    await act(async () => {
+      await result.current.start('the cat', 'en', 'guided');
+    });
+    await act(async () => {
+      sayThenPause('the cat'); // both words in one utterance
+      await flush();
+    });
+    expect(result.current.status).toBe('done');
+    expect(result.current.evaluation?.frontier).toBe(2);
+    expect(result.current.session).toMatchObject({ target: 'the cat', lang: 'en' });
+  });
+
+  it('guided skip advances past the current word and marks it skipped', async () => {
+    const { result } = renderHook(() => useAsr());
+    await act(async () => {
+      await result.current.start('the cat', 'en', 'guided');
+    });
+    act(() => result.current.skip());
+    expect(result.current.evaluation?.frontier).toBe(1);
+    expect(result.current.evaluation?.status[0]).toBe('skipped');
+  });
 });
