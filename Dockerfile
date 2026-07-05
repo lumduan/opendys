@@ -61,7 +61,7 @@ add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; script-
 add_header X-Content-Type-Options "nosniff" always;
 add_header Referrer-Policy "no-referrer" always;
 add_header X-Frame-Options "DENY" always;
-add_header Permissions-Policy "accelerometer=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(self), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), hid=(), idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()" always;
+add_header Permissions-Policy "accelerometer=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(self), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), hid=(), idle-detection=(), local-fonts=(), magnetometer=(), microphone=(self), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()" always;
 add_header Cross-Origin-Opener-Policy "same-origin" always;
 add_header Cross-Origin-Resource-Policy "same-origin" always;
 EOF
@@ -73,12 +73,13 @@ COPY <<'EOF' /etc/nginx/templates/typhoon-api.conf.template
 resolver ${NGINX_LOCAL_RESOLVERS} valid=30s ipv6=off;
 set $typhoon_key "${TYPHOON_API}";
 
-# Capability probe the SPA calls on load to decide whether to offer the cloud toggle.
+# Capability probe the SPA calls on load to decide whether to offer the cloud toggles. One key
+# (TYPHOON_API) gates both the cloud OCR and the ASR reading-assessment features.
 location = /api/ocr-capabilities {
   include /etc/nginx/snippets/security-headers.conf;
   default_type application/json;
-  if ($typhoon_key = "") { return 200 '{"typhoon":false}'; }
-  return 200 '{"typhoon":true}';
+  if ($typhoon_key = "") { return 200 '{"typhoon":false,"asr":false}'; }
+  return 200 '{"typhoon":true,"asr":true}';
 }
 
 # Same-origin proxy → Typhoon OCR. The browser never sees the key; nginx injects it here.
@@ -87,6 +88,24 @@ location = /api/typhoon-ocr {
   if ($typhoon_key = "") { return 503 '{"error":"typhoon_not_configured"}'; }
   set $typhoon_upstream "api.opentyphoon.ai";
   proxy_pass https://$typhoon_upstream/v1/ocr;
+  proxy_http_version 1.1;
+  proxy_ssl_server_name on;
+  proxy_ssl_name $typhoon_upstream;
+  proxy_set_header Host $typhoon_upstream;
+  proxy_set_header Authorization "Bearer $typhoon_key";
+  proxy_set_header Cookie "";
+  client_max_body_size 25m;
+  proxy_read_timeout 120s;
+  proxy_send_timeout 120s;
+}
+
+# Same-origin proxy → Typhoon ASR (OpenAI-compatible batch transcription). Reuses the SAME
+# server-side key; the browser posts short audio windows here and never sees the key.
+location = /api/typhoon-asr {
+  include /etc/nginx/snippets/security-headers.conf;
+  if ($typhoon_key = "") { return 503 '{"error":"typhoon_not_configured"}'; }
+  set $typhoon_upstream "api.opentyphoon.ai";
+  proxy_pass https://$typhoon_upstream/v1/audio/transcriptions;
   proxy_http_version 1.1;
   proxy_ssl_server_name on;
   proxy_ssl_name $typhoon_upstream;

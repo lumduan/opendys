@@ -16,7 +16,8 @@ function ocrCapabilitiesDev(typhoonConfigured: boolean): Plugin {
     configureServer(server) {
       server.middlewares.use('/api/ocr-capabilities', (_req, res) => {
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ typhoon: typhoonConfigured }));
+        // One key gates both cloud OCR and ASR reading assessment.
+        res.end(JSON.stringify({ typhoon: typhoonConfigured, asr: typhoonConfigured }));
       });
     },
   };
@@ -122,6 +123,13 @@ export default defineConfig(({ mode }) => {
               target: 'https://api.opentyphoon.ai',
               changeOrigin: true,
               rewrite: (path) => path.replace(/^\/api\/typhoon-ocr$/, '/v1/ocr'),
+              headers: { Authorization: `Bearer ${typhoonKey}` },
+            },
+            // Opt-in ASR reading assessment: same server-side key injection as OCR above.
+            '/api/typhoon-asr': {
+              target: 'https://api.opentyphoon.ai',
+              changeOrigin: true,
+              rewrite: (path) => path.replace(/^\/api\/typhoon-asr$/, '/v1/audio/transcriptions'),
               headers: { Authorization: `Bearer ${typhoonKey}` },
             },
           }

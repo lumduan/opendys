@@ -4,13 +4,15 @@ import { wordRange, type SpeechChunk } from '@/utils/reader';
 
 const HIGHLIGHT_NAME = 'reader-word';
 
-/** True only where the CSS Custom Highlight API exists (Chrome 105+, Safari 17.2+, Firefox 117+). */
-function highlightSupported(): boolean {
+/** True only where the CSS Custom Highlight API exists (Chrome 105+, Safari 17.2+, Firefox 117+).
+ *  Exported so the ASR reading-assessment highlight (`useAsrHighlight`) shares the same feature gate. */
+export function highlightSupported(): boolean {
   return typeof CSS !== 'undefined' && 'highlights' in CSS && typeof Highlight === 'function';
 }
 
-/** Build a Range spanning `[start, end)` characters across an element's descendant text nodes. */
-function buildTextRange(root: Element, start: number, end: number): Range | null {
+/** Build a Range spanning `[start, end)` characters across an element's descendant text nodes.
+ *  Shared with `useAsrHighlight` — both paint DOM Ranges over the same `[data-chunk-index]` surface. */
+export function buildTextRange(root: Element, start: number, end: number): Range | null {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const range = document.createRange();
   let offset = 0;

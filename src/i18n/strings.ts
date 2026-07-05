@@ -63,6 +63,36 @@ export interface OcrStrings {
   };
 }
 
+export interface AsrStrings {
+  readonly navLabel: string;
+  readonly title: string;
+  readonly intro: string;
+  readonly cloudNotice: string;
+  readonly targetLabel: string;
+  readonly sample: string;
+  readonly langEnglish: string;
+  readonly langThai: string;
+  readonly practice: string;
+  readonly stop: string;
+  readonly requesting: string;
+  readonly recording: string;
+  readonly processing: string;
+  readonly transcriptLabel: string;
+  readonly accuracyLabel: string;
+  readonly mispronouncedLabel: string;
+  readonly homeLink: string;
+  // keys align with AsrErrorKey (src/hooks/useAsr.ts)
+  readonly errors: {
+    readonly unsupported: string;
+    readonly micDenied: string;
+    readonly micUnavailable: string;
+    readonly cloudNotConfigured: string;
+    readonly cloudAuth: string;
+    readonly cloudRateLimit: string;
+    readonly cloudFailed: string;
+  };
+}
+
 export interface ReaderStrings {
   readonly navLabel: string;
   readonly pageTitle: string;
@@ -109,6 +139,7 @@ export interface UIStrings {
   readonly footer: string;
   readonly pillars: readonly Pillar[];
   readonly ocr: OcrStrings;
+  readonly asr: AsrStrings;
   readonly reader: ReaderStrings;
   readonly settings: SettingsStrings;
 }
@@ -189,6 +220,38 @@ export const strings: Record<Language, UIStrings> = {
         cloudAuth: 'Cloud OCR rejected the API key. Check the server’s TYPHOON_API key.',
         cloudRateLimit: 'Cloud OCR is rate-limited right now. Please wait a moment and try again.',
         cloudFailed: 'Cloud OCR could not be reached. Check your connection, or use on-device OCR.',
+      },
+    },
+    asr: {
+      navLabel: 'Practice reading',
+      title: 'Practice reading aloud',
+      intro:
+        'Read the text aloud and watch each word get checked in real time. Your voice is sent for recognition only while you practice.',
+      cloudNotice:
+        'Practice sends short clips of your voice to Typhoon (opentyphoon.ai) for speech recognition — audio leaves your device. Nothing is sent unless you start practicing.',
+      targetLabel: 'Text to read',
+      sample: 'Load a sample',
+      langEnglish: 'English',
+      langThai: 'ไทย (Thai)',
+      practice: 'Practice reading (ฝึกอ่านออกเสียง)',
+      stop: 'Stop',
+      requesting: 'Requesting microphone access…',
+      recording: 'Listening — read the text aloud.',
+      processing: 'Scoring your reading…',
+      transcriptLabel: 'What we heard',
+      accuracyLabel: 'Accuracy',
+      mispronouncedLabel: 'Missed or mispronounced',
+      homeLink: '← Home',
+      errors: {
+        unsupported:
+          'This browser cannot record audio (MediaRecorder or microphone access is unavailable).',
+        micDenied: 'Microphone permission was denied. Please allow microphone access and try again.',
+        micUnavailable: 'No microphone is available on this device.',
+        cloudNotConfigured:
+          'Cloud speech recognition is not set up on this server. Add a TYPHOON_API key to enable practice.',
+        cloudAuth: 'Cloud speech recognition rejected the API key. Check the server’s TYPHOON_API key.',
+        cloudRateLimit: 'Cloud speech recognition is rate-limited right now. Please wait a moment and try again.',
+        cloudFailed: 'Cloud speech recognition could not be reached. Check your connection and try again.',
       },
     },
     reader: {
@@ -304,6 +367,37 @@ export const strings: Record<Language, UIStrings> = {
         cloudAuth: 'OCR แบบคลาวด์ปฏิเสธคีย์ API กรุณาตรวจสอบคีย์ TYPHOON_API ของเซิร์ฟเวอร์',
         cloudRateLimit: 'OCR แบบคลาวด์ถูกจำกัดอัตราการใช้งานอยู่ กรุณารอสักครู่แล้วลองใหม่',
         cloudFailed: 'ไม่สามารถเชื่อมต่อ OCR แบบคลาวด์ได้ กรุณาตรวจสอบการเชื่อมต่อ หรือใช้ OCR บนเครื่อง',
+      },
+    },
+    asr: {
+      navLabel: 'ฝึกอ่าน',
+      title: 'ฝึกอ่านออกเสียง',
+      intro:
+        'อ่านข้อความออกเสียงแล้วดูการตรวจแต่ละคำแบบเรียลไทม์ เสียงของคุณจะถูกส่งไปเพื่อรู้จำเฉพาะตอนที่ฝึกเท่านั้น',
+      cloudNotice:
+        'การฝึกจะส่งคลิปเสียงสั้น ๆ ของคุณไปยัง Typhoon (opentyphoon.ai) เพื่อรู้จำเสียงพูด — เสียงจะออกจากอุปกรณ์ ระบบจะไม่ส่งอะไรจนกว่าคุณจะเริ่มฝึก',
+      targetLabel: 'ข้อความที่จะอ่าน',
+      sample: 'ใส่ข้อความตัวอย่าง',
+      langEnglish: 'อังกฤษ',
+      langThai: 'ไทย',
+      practice: 'ฝึกอ่านออกเสียง',
+      stop: 'หยุด',
+      requesting: 'กำลังขออนุญาตใช้ไมโครโฟน…',
+      recording: 'กำลังฟัง — อ่านข้อความออกเสียง',
+      processing: 'กำลังประเมินการอ่าน…',
+      transcriptLabel: 'สิ่งที่ได้ยิน',
+      accuracyLabel: 'ความแม่นยำ',
+      mispronouncedLabel: 'คำที่ข้ามหรืออ่านผิด',
+      homeLink: '← หน้าแรก',
+      errors: {
+        unsupported: 'เบราว์เซอร์นี้ไม่สามารถบันทึกเสียงได้ (ไม่มี MediaRecorder หรือการเข้าถึงไมโครโฟน)',
+        micDenied: 'การเข้าถึงไมโครโฟนถูกปฏิเสธ กรุณาอนุญาตแล้วลองใหม่อีกครั้ง',
+        micUnavailable: 'ไม่พบไมโครโฟนบนอุปกรณ์นี้',
+        cloudNotConfigured:
+          'เซิร์ฟเวอร์นี้ยังไม่ได้ตั้งค่าการรู้จำเสียงแบบคลาวด์ กรุณาเพิ่มคีย์ TYPHOON_API เพื่อเปิดใช้การฝึก',
+        cloudAuth: 'การรู้จำเสียงแบบคลาวด์ปฏิเสธคีย์ API กรุณาตรวจสอบคีย์ TYPHOON_API ของเซิร์ฟเวอร์',
+        cloudRateLimit: 'การรู้จำเสียงแบบคลาวด์ถูกจำกัดอัตราการใช้งานอยู่ กรุณารอสักครู่แล้วลองใหม่',
+        cloudFailed: 'ไม่สามารถเชื่อมต่อการรู้จำเสียงแบบคลาวด์ได้ กรุณาตรวจสอบการเชื่อมต่อแล้วลองใหม่',
       },
     },
     reader: {
