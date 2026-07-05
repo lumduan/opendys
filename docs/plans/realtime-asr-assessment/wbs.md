@@ -27,12 +27,14 @@ Maps to **Phase 8** in the [ROADMAP](../ROADMAP.md#phase-8--real-time-asr-readin
       (`evaluate`/`joinWindows`), `highlightRanges`, `storage`, barrel `index.ts`
 - [x] Colocated `*.test.ts` for every module — **100% coverage on `src/utils/asr/**`** (clears 90/80)
 
-## P3 — UI layouts (production integration) — future
+## P3 — UI layouts (production integration)
 
-- [ ] Production **Practice Reading** control on the reader/OCR result surface (reuse `<Reader>`),
-      gated by `asr.typhoonAsrAvailable`, with the persistent consent notice
-- [ ] Full permission / error / recording-state UX and reduced-motion behavior
-- [ ] Wire the ASR i18n through the Phase-4 i18n context (currently English-only on the dev page)
+- [x] Production **Practice Reading** control in the shared `<Reader>` (ships to `/reader` + OCR results
+      at once), gated by `asr.supported && asr.typhoonAsrAvailable`, mutually exclusive with Read-Aloud
+      TTS, with a consent notice shown during an active session + a compact accuracy/missed-words readout;
+      sessions persisted via `src/services/asr/asrHistory.ts` (shared with the dev page)
+- [x] Full permission / error / recording-state UX (reduced-motion is CSS-only, unaffected)
+- [ ] Wire the ASR i18n through the Phase-4 i18n context (still English-only via `strings.en.asr`)
 
 ## P4 — Analytics (offline dashboard) — future
 

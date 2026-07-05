@@ -3,37 +3,13 @@ import { Link } from 'react-router-dom';
 import { strings } from '@/i18n/strings';
 import { splitSpeechChunks, type SpeechLang } from '@/utils/reader';
 import { THAI_COLORS } from '@/utils/thai';
-import { addSession, parseHistory, serializeHistory, type AsrSession } from '@/utils/asr';
+import { saveAsrSession, ASR_STORAGE_KEY } from '@/services/asr/asrHistory';
 import { Chunk } from '@/components/reader/Chunk';
 import { useAsr } from '@/hooks/useAsr';
 import { useAsrHighlight } from '@/hooks/useAsrHighlight';
 
 const SAMPLE_EN = 'The quick brown fox jumps over the lazy dog.';
 const SAMPLE_TH = 'เด็กน้อยอ่านหนังสือทุกวัน';
-
-/** On-device practice history. localStorage convention `opendys.<domain>.v<N>` (see SettingsProvider). */
-const STORAGE_KEY = 'opendys.asr.v1';
-
-function safeGet(key: string): string | null {
-  try {
-    return window.localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-function safeSet(key: string, value: string): void {
-  try {
-    window.localStorage.setItem(key, value);
-  } catch {
-    /* private-mode / disabled storage — ignore */
-  }
-}
-
-/** Bank each finished session immediately (capture-first — even before the stats dashboard exists). */
-function persistSession(session: AsrSession): void {
-  const history = parseHistory(safeGet(STORAGE_KEY));
-  safeSet(STORAGE_KEY, serializeHistory(addSession(history, session)));
-}
 
 const noop = () => {};
 
@@ -69,7 +45,7 @@ export function AsrPlaygroundPage() {
   const handleStop = () => {
     const session = asr.stop();
     if (session) {
-      persistSession(session);
+      saveAsrSession(session);
       setSaved(true);
     }
   };
@@ -211,7 +187,7 @@ export function AsrPlaygroundPage() {
       )}
 
       {saved && (
-        <p className="mt-3 text-sm text-success">Saved to on-device history ({STORAGE_KEY}).</p>
+        <p className="mt-3 text-sm text-success">Saved to on-device history ({ASR_STORAGE_KEY}).</p>
       )}
     </section>
   );
