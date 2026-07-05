@@ -177,6 +177,33 @@ site stays fully static/private).
 
 ---
 
+## Phase 8 — Real-time ASR Reading Assessment
+
+> Goal: Turn the passive reader into an active practice tool — read aloud, get real-time green/red
+> per-word feedback via opt-in cloud ASR, and bank on-device progress stats — without giving up the
+> private, offline default.
+
+- [~] **v1.4.0 (in progress)** — opt-in **Practice Reading (ฝึกอ่านออกเสียง)**: same-origin
+      `/api/typhoon-asr` proxy injecting the **server-side** `TYPHOON_API` key (off by default; key never
+      in the bundle; `connect-src 'self'` unchanged; no key ⇒ 503 / feature hidden). Micro-batch
+      pseudo-streaming (hosted API is batch-only) with **WAV/PCM AudioWorklet capture** (Chrome's
+      webm/opus is rejected by Typhoon — verified live), a fuzzy token-alignment engine
+      (`src/utils/asr/`, EN-word / TH-syllable, monotonic reading frontier) driving green/red/current
+      highlights via the CSS Custom Highlight API, and on-device session stats (`localStorage
+      opendys.asr.v1`). `Permissions-Policy` now allows `microphone=(self)`. Blueprint + PoC in
+      `docs/plans/realtime-asr-assessment/`; [ADR-0007](./adr/ADR-0007-optional-cloud-asr-and-microphone.md).
+
+**Landed this pass (PoC + Core Parser + infra):** alignment engine + tests (100% coverage), the
+`/api/typhoon-asr` proxy (prod + dev) + capability probe, `useAsr`/`useAsrHighlight`, and the
+`/dev/asr-playground` sandbox. **Next:** production reader integration, the offline stats dashboard, and
+hardening/release (see [wbs.md](./realtime-asr-assessment/wbs.md) P3–P5).
+
+**Exit criteria:** a learner reads a snippet aloud and sees per-word green/red feedback + accuracy;
+sessions persist locally; no key ⇒ feature hidden and the site stays fully static/private; live-verify
+the codec + read-through end-to-end on Chrome/Safari.
+
+---
+
 ## Dependency Map
 
 ```
@@ -205,9 +232,11 @@ Phase 3 (OCR) depends only on Phase 0 and can proceed in parallel with Phase 2; 
 
 ## Current Status
 
-- **Active phase:** Phase 7 (post-1.0 OCR quality & optional cloud) — shipping incrementally.
-- **Completed:** Phases 0–6 (**v1.0.0**) + Phase 7 to date — **v1.0.1** (Thai render fix), **v1.1.0**
-  (on-device OCR tuning), **v1.2.0** (opt-in Typhoon cloud OCR).
+- **Active phase:** Phase 8 (real-time ASR reading assessment) — **v1.4.0** in progress (PoC + core
+  alignment engine + `/api/typhoon-asr` proxy landed; production reader UI, stats dashboard, and release
+  remain).
+- **Completed:** Phases 0–6 (**v1.0.0**) + Phase 7 — **v1.0.1** (Thai render fix), **v1.1.0** (on-device
+  OCR tuning), **v1.2.0** (opt-in Typhoon cloud OCR), **v1.3.0** (granular Thai coloring + karaoke TTS).
 - **Released:** `v1.0.0` → `v1.2.0` on `ghcr.io/lumduan/opendys` (`:latest` = newest, public); GitHub
   Releases published; CI + Release workflows green.
 - **Manual/device checks remaining:** Lighthouse PWA+a11y, real EN/TH TTS audio on-device, camera

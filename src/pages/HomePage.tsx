@@ -37,9 +37,12 @@ export function HomePage() {
         ))}
       </div>
 
-      <div className="mt-8 text-center">
+      <div className="mt-8 flex flex-wrap justify-center gap-2 text-center">
         <Link to="/dev/thai-colors" className="btn btn-outline btn-sm">
           Preview the Thai 4-level color engine →
+        </Link>
+        <Link to="/dev/asr-playground" className="btn btn-outline btn-sm">
+          Try the ASR reading playground →
         </Link>
       </div>
 

@@ -56,6 +56,21 @@ body {
   background-color: rgba(251, 191, 36, 0.75);
 }
 
+/* Reading assessment (Phase 8): live green / red / current highlights painted over the target text
+   with the same CSS Custom Highlight API. `asr-error` adds a wavy underline as a non-color WCAG 1.4.1
+   cue (matching the silent-role underline in ColorText); `asr-current` marks the next word to read.
+   Where the API is unavailable the target simply stays plain. */
+::highlight(asr-correct) {
+  background-color: rgba(74, 222, 128, 0.45);
+}
+::highlight(asr-error) {
+  background-color: rgba(248, 113, 113, 0.5);
+  text-decoration: underline wavy;
+}
+::highlight(asr-current) {
+  background-color: rgba(251, 191, 36, 0.5);
+}
+
 /* Reading ruler: the band's huge box-shadow is clipped to this wrapper, so only
    the reading text dims — nav and drawer (outside the wrapper) stay bright. */
 .reader-ruler-wrapper {

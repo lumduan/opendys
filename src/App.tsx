@@ -9,6 +9,9 @@ const OcrPage = lazy(() => import('@/pages/OcrPage').then((m) => ({ default: m.O
 const ThaiColorDemoPage = lazy(() =>
   import('@/pages/ThaiColorDemoPage').then((m) => ({ default: m.ThaiColorDemoPage })),
 );
+const AsrPlaygroundPage = lazy(() =>
+  import('@/pages/AsrPlaygroundPage').then((m) => ({ default: m.AsrPlaygroundPage })),
+);
 
 export default function App() {
   return (
@@ -18,6 +21,7 @@ export default function App() {
         <Route path="/reader" element={<ReaderPage />} />
         <Route path="/read" element={<OcrPage />} />
         <Route path="/dev/thai-colors" element={<ThaiColorDemoPage />} />
+        <Route path="/dev/asr-playground" element={<AsrPlaygroundPage />} />
       </Route>
     </Routes>
   );
