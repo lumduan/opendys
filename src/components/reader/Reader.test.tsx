@@ -2,7 +2,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { UseAsrResult } from '@/hooks/useAsr';
 import type { UseSpeechResult } from '@/hooks/useSpeech';
-import type { AsrSession } from '@/utils/asr';
+import { guidedEvaluate, tokenizeTarget, type AsrSession } from '@/utils/asr';
+import { splitSpeechChunks } from '@/utils/reader';
 
 // Mutable holders so each test can set hook state before rendering (hoisted above the vi.mock factories).
 const { asrHolder, speechHolder, saveMock } = vi.hoisted(() => ({
@@ -24,11 +25,14 @@ function makeAsr(over: Partial<UseAsrResult> = {}): UseAsrResult {
     supported: true,
     typhoonAsrAvailable: true,
     status: 'idle',
+    mode: 'free',
     error: null,
     hypothesis: '',
     evaluation: null,
+    session: null,
     start: vi.fn(async () => {}),
     stop: vi.fn(() => null),
+    skip: vi.fn(),
     reset: vi.fn(),
     ...over,
   };
@@ -61,6 +65,8 @@ const sessionFixture: AsrSession = {
   mispronounced: [],
   skipped: [],
 };
+
+const guidedEval = (hyp: string) => guidedEvaluate(tokenizeTarget(splitSpeechChunks('the cat')), hyp);
 
 beforeEach(() => {
   saveMock.mockClear();
@@ -104,17 +110,38 @@ describe('Reader — Practice control', () => {
     render(<Reader text="the cat" lang="en" />);
     fireEvent.click(screen.getByTestId('practice'));
     expect(speechHolder.current.stop).toHaveBeenCalled();
-    expect(asrHolder.current.start).toHaveBeenCalledWith('the cat', 'en');
+    expect(asrHolder.current.start).toHaveBeenCalledWith('the cat', 'en', 'free');
     const stopOrder = (speechHolder.current.stop as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
     const startOrder = (asrHolder.current.start as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
     expect(stopOrder).toBeLessThan(startOrder);
   });
 
-  it('persists the session when practice stops', () => {
-    asrHolder.current = makeAsr({ status: 'recording', stop: vi.fn(() => sessionFixture) });
+  it('stops practice on the Stop button', () => {
+    asrHolder.current = makeAsr({ status: 'recording' });
     render(<Reader text="the cat" lang="en" />);
     fireEvent.click(screen.getByTestId('asr-stop'));
     expect(asrHolder.current.stop).toHaveBeenCalled();
+  });
+
+  it('persists a finished session via the session effect', () => {
+    asrHolder.current = makeAsr({ status: 'done', session: sessionFixture });
+    render(<Reader text="the cat" lang="en" />);
     expect(saveMock).toHaveBeenCalledWith(sessionFixture);
+  });
+
+  it('starts guided mode when the Word-by-word toggle is selected', () => {
+    render(<Reader text="the cat" lang="en" />);
+    fireEvent.click(screen.getByTestId('mode-guided'));
+    fireEvent.click(screen.getByTestId('practice'));
+    expect(asrHolder.current.start).toHaveBeenCalledWith('the cat', 'en', 'guided');
+  });
+
+  it('guided: shows progress + Skip while recording and calls skip()', () => {
+    asrHolder.current = makeAsr({ status: 'recording', mode: 'guided', evaluation: guidedEval('the') });
+    render(<Reader text="the cat" lang="en" />);
+    expect(screen.getByTestId('asr-guided-readout')).toBeInTheDocument();
+    expect(screen.queryByTestId('asr-readout')).toBeNull(); // no free-mode accuracy readout
+    fireEvent.click(screen.getByTestId('asr-skip'));
+    expect(asrHolder.current.skip).toHaveBeenCalled();
   });
 });

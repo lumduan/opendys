@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { strings } from '@/i18n/strings';
 import { useSettings } from '@/context/settingsContext';
 import { useSpeech } from '@/hooks/useSpeech';
 import { useWordHighlight } from '@/hooks/useWordHighlight';
-import { useAsr } from '@/hooks/useAsr';
+import { useAsr, type AsrMode } from '@/hooks/useAsr';
 import { useAsrHighlight } from '@/hooks/useAsrHighlight';
 import { saveAsrSession } from '@/services/asr/asrHistory';
 import {
@@ -35,6 +35,7 @@ export function Reader({ text, lang }: ReaderProps) {
   const { settings } = useSettings();
   const speech = useSpeech();
   const asr = useAsr();
+  const [practiceMode, setPracticeMode] = useState<AsrMode>('free');
   const surfaceRef = useRef<HTMLDivElement>(null);
 
   const chunks = useMemo(() => splitSpeechChunks(text), [text]);
@@ -52,6 +53,11 @@ export function Reader({ text, lang }: ReaderProps) {
   useEffect(() => {
     resetAsr();
   }, [text, lang, resetAsr]);
+
+  // Persist a finished session (manual stop OR guided auto-finish) once, on-device.
+  useEffect(() => {
+    if (asr.session) saveAsrSession(asr.session);
+  }, [asr.session]);
   const hasThai = useMemo(() => containsThai(text), [text]);
   const palette = useMemo(() => paletteFor(settings.palette), [settings.palette]);
 
@@ -70,6 +76,9 @@ export function Reader({ text, lang }: ReaderProps) {
   const canPractice = asrAvailable && text.trim() !== '';
   const accuracyPct = Math.round((asr.evaluation?.accuracy ?? 0) * 100);
   const missed = asr.evaluation ? [...asr.evaluation.mispronounced, ...asr.evaluation.skipped] : [];
+  const guided = asr.mode === 'guided';
+  const total = asr.evaluation?.tokens.length ?? 0;
+  const cursor = asr.evaluation?.frontier ?? 0;
 
   const handleSpeakChunk = (index: number, chunkText: string) => {
     if (voiceAvailable) speech.speakChunk(chunkText, lang, index, settings.ttsRate);
@@ -77,12 +86,11 @@ export function Reader({ text, lang }: ReaderProps) {
 
   const handlePractice = () => {
     speech.stop(); // stop TTS first: frees the audio channel (no mic feedback) and clears reader-word
-    void asr.start(text, lang);
+    void asr.start(text, lang, practiceMode);
   };
 
   const handleStopPractice = () => {
-    const session = asr.stop();
-    if (session) saveAsrSession(session);
+    asr.stop(); // the finished session is persisted by the asr.session effect
   };
 
   return (
@@ -114,27 +122,62 @@ export function Reader({ text, lang }: ReaderProps) {
             </>
           )}
 
-          {asrAvailable &&
-            (recording ? (
-              <button
-                type="button"
-                className="btn btn-sm btn-error"
-                onClick={handleStopPractice}
-                data-testid="asr-stop"
-              >
-                {tAsr.stop}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={handlePractice}
-                disabled={!canPractice || speech.speaking}
-                data-testid="practice"
-              >
-                🎤 {tAsr.practice}
-              </button>
-            ))}
+          {asrAvailable && (
+            <>
+              {!recording && (
+                <div className="join" role="group" aria-label="practice mode">
+                  <button
+                    type="button"
+                    className={`btn btn-xs join-item ${practiceMode === 'free' ? 'btn-active' : ''}`}
+                    onClick={() => setPracticeMode('free')}
+                    data-testid="mode-free"
+                  >
+                    {tAsr.modeWhole}
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn-xs join-item ${practiceMode === 'guided' ? 'btn-active' : ''}`}
+                    onClick={() => setPracticeMode('guided')}
+                    data-testid="mode-guided"
+                  >
+                    {tAsr.modeGuided}
+                  </button>
+                </div>
+              )}
+              {recording ? (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-error"
+                    onClick={handleStopPractice}
+                    data-testid="asr-stop"
+                  >
+                    {tAsr.stop}
+                  </button>
+                  {guided && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost"
+                      onClick={asr.skip}
+                      data-testid="asr-skip"
+                    >
+                      {tAsr.skip}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={handlePractice}
+                  disabled={!canPractice || speech.speaking}
+                  data-testid="practice"
+                >
+                  🎤 {tAsr.practice}
+                </button>
+              )}
+            </>
+          )}
 
           {asr.status === 'requesting' && <span className="text-sm">{tAsr.requesting}</span>}
           {asr.status === 'recording' && (
@@ -179,7 +222,19 @@ export function Reader({ text, lang }: ReaderProps) {
         </div>
       </ReadingRuler>
 
-      {asr.evaluation && (
+      {asr.evaluation && guided && (
+        <div className="mt-3 rounded-box bg-base-100 p-4 shadow-sm" data-testid="asr-guided-readout">
+          {asr.status === 'done' ? (
+            <div className="font-semibold text-success">{tAsr.guidedDone}</div>
+          ) : (
+            <div className="text-sm">
+              <span className="font-semibold">{tAsr.progress}</span> {Math.min(cursor + 1, total)} / {total}
+            </div>
+          )}
+        </div>
+      )}
+
+      {asr.evaluation && !guided && (
         <div className="mt-3 rounded-box bg-base-100 p-4 shadow-sm" data-testid="asr-readout">
           <div className="text-sm">
             <span className="font-semibold">{tAsr.accuracyLabel}:</span> {accuracyPct}%
