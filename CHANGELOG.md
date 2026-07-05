@@ -6,6 +6,18 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.5.0] — 2026-07-05
+
+### Added
+
+- **Guided "word-by-word" reading mode (karaoke read-along).** A new **Word by word** toggle in the
+  reader's Practice controls, alongside the existing whole-passage mode: each word (English) or syllable
+  (Thai) is highlighted one at a time; when you read it correctly it turns **green** and the cursor
+  advances to the next — down to the end — with a running **"Word X / N"** progress, a **Skip** button
+  for words to pass, and a completion celebration. It waits on the current word (strict) and advances on
+  your natural pauses. Runs through the same opt-in Typhoon ASR path (off by default; server-side key; a
+  deployment without a key never shows it).
+
 ## [1.4.0] — 2026-07-05
 
 ### Added
