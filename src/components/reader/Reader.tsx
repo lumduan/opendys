@@ -38,6 +38,8 @@ export function Reader({ text, lang }: ReaderProps) {
   const [practiceMode, setPracticeMode] = useState<AsrMode>('free');
   // Line mode: whether clicking a line plays it via TTS before recording (default on = "click reads aloud").
   const [ttsPreview, setTtsPreview] = useState(true);
+  // Line mode: trailing-silence that auto-stops + analyzes a line (seconds). 0 = disabled (manual only).
+  const [silenceSec, setSilenceSec] = useState(5);
   const surfaceRef = useRef<HTMLDivElement>(null);
 
   const chunks = useMemo(() => splitSpeechChunks(text), [text]);
@@ -90,7 +92,7 @@ export function Reader({ text, lang }: ReaderProps) {
     if (!chunk || chunk.speak === '') return;
     speech.stop(); // free the audio channel + clear any prior TTS before recording
     const beginRecording = () => {
-      void asr.start(chunk.raw, lang, 'line', index);
+      void asr.start(chunk.raw, lang, 'line', index, silenceSec * 1000);
     };
     if (ttsPreview && voiceAvailable) {
       speech.speakChunk(chunk.speak, lang, index, settings.ttsRate, beginRecording);
@@ -173,6 +175,23 @@ export function Reader({ text, lang }: ReaderProps) {
                   {ttsPreview ? tAsr.ttsPreviewOn : tAsr.ttsPreviewOff}
                 </button>
               )}
+              {practiceMode === 'line' && !recording && (
+                <label className="flex items-center gap-1 text-xs text-base-content/80">
+                  <span>{tAsr.silenceLabel}</span>
+                  <select
+                    className="select select-bordered select-xs"
+                    value={silenceSec}
+                    onChange={(event) => setSilenceSec(Number(event.target.value))}
+                    data-testid="silence-select"
+                  >
+                    {[3, 4, 5, 8, 10].map((n) => (
+                      <option key={n} value={n}>
+                        {n}s
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {recording ? (
                 <button
                   type="button"
@@ -180,7 +199,7 @@ export function Reader({ text, lang }: ReaderProps) {
                   onClick={handleStopPractice}
                   data-testid="asr-stop"
                 >
-                  {tAsr.stop}
+                  {practiceMode === 'line' ? tAsr.doneReading : tAsr.stop}
                 </button>
               ) : practiceMode === 'free' ? (
                 <button
@@ -203,6 +222,24 @@ export function Reader({ text, lang }: ReaderProps) {
           {asr.status === 'requesting' && <span className="text-sm">{tAsr.requesting}</span>}
           {asr.status === 'recording' && (
             <span className="text-sm text-success">{tAsr.recording}</span>
+          )}
+          {asr.status === 'recording' && (
+            <span
+              className="inline-flex items-center gap-2"
+              data-testid="asr-meter"
+              role="meter"
+              aria-label={tAsr.micLevelLabel}
+              aria-valuenow={Math.round(asr.micLevel * 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <span className="inline-block h-2 w-24 overflow-hidden rounded-full bg-base-300">
+                <span
+                  className="block h-full rounded-full bg-success transition-[width] duration-75"
+                  style={{ width: `${Math.round(asr.micLevel * 100)}%` }}
+                />
+              </span>
+            </span>
           )}
           {asr.status === 'processing' && <span className="text-sm">{tAsr.processing}</span>}
         </div>

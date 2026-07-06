@@ -29,6 +29,7 @@ function makeAsr(over: Partial<UseAsrResult> = {}): UseAsrResult {
     hypothesis: '',
     evaluation: null,
     session: null,
+    micLevel: 0,
     start: vi.fn(async () => {}),
     stop: vi.fn(async () => null),
     reset: vi.fn(),
@@ -153,6 +154,32 @@ describe('Reader — Practice control', () => {
     fireEvent.click(screen.getByTestId('mode-line'));
     fireEvent.click(screen.getByTestId('tts-preview-toggle')); // disable the preview
     fireEvent.click(container.querySelector('[data-chunk-index="0"]') as HTMLElement);
-    expect(asrHolder.current.start).toHaveBeenCalledWith('the cat', 'en', 'line', 0);
+    expect(asrHolder.current.start).toHaveBeenCalledWith('the cat', 'en', 'line', 0, 5000);
+  });
+
+  it('line mode shows the silence auto-stop select (default 5s) when not recording', () => {
+    render(<Reader text="the cat" lang="en" />);
+    fireEvent.click(screen.getByTestId('mode-line'));
+    const select = screen.getByTestId('silence-select') as HTMLSelectElement;
+    expect(select).toBeInTheDocument();
+    expect(select.value).toBe('5');
+    fireEvent.change(select, { target: { value: '10' } });
+    expect(select.value).toBe('10');
+  });
+
+  it('line mode labels the stop button "Done reading"', () => {
+    const { rerender } = render(<Reader text="the cat" lang="en" />);
+    fireEvent.click(screen.getByTestId('mode-line')); // practiceMode -> 'line'
+    asrHolder.current = makeAsr({ status: 'recording', mode: 'line' });
+    rerender(<Reader text="the cat" lang="en" />);
+    expect(screen.getByTestId('asr-stop')).toHaveTextContent('Done reading');
+  });
+
+  it('shows a mic-level gauge while recording', () => {
+    asrHolder.current = makeAsr({ status: 'recording', mode: 'line', micLevel: 0.5 });
+    render(<Reader text="the cat" lang="en" />);
+    const meter = screen.getByRole('meter', { name: /microphone level/i });
+    expect(meter).toBeInTheDocument();
+    expect(meter).toHaveAttribute('aria-valuenow', '50');
   });
 });

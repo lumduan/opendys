@@ -88,6 +88,9 @@ export interface AsrStrings {
   readonly ttsPreviewOn: string;
   readonly ttsPreviewOff: string;
   readonly lineHint: string;
+  readonly doneReading: string;
+  readonly silenceLabel: string;
+  readonly micLevelLabel: string;
   // keys align with AsrErrorKey (src/hooks/useAsr.ts)
   readonly errors: {
     readonly unsupported: string;
@@ -256,6 +259,9 @@ export const strings: Record<Language, UIStrings> = {
       ttsPreviewOn: '🔊 TTS preview: on',
       ttsPreviewOff: '🔊 TTS preview: off',
       lineHint: 'Tap a line to practice',
+      doneReading: 'Done reading',
+      silenceLabel: 'Auto-stop after silence',
+      micLevelLabel: 'Microphone level',
       errors: {
         unsupported:
           'This browser cannot record audio (MediaRecorder or microphone access is unavailable).',
@@ -410,6 +416,9 @@ export const strings: Record<Language, UIStrings> = {
       ttsPreviewOn: '🔊 ตัวอย่างเสียง: เปิด',
       ttsPreviewOff: '🔊 ตัวอย่างเสียง: ปิด',
       lineHint: 'แตะบรรทัดเพื่อฝึก',
+      doneReading: 'อ่านจบแล้ว',
+      silenceLabel: 'หยุดอัตโนมัติเมื่อเงียบ',
+      micLevelLabel: 'ระดับเสียงไมโครโฟน',
       errors: {
         unsupported: 'เบราว์เซอร์นี้ไม่สามารถบันทึกเสียงได้ (ไม่มี MediaRecorder หรือการเข้าถึงไมโครโฟน)',
         micDenied: 'การเข้าถึงไมโครโฟนถูกปฏิเสธ กรุณาอนุญาตแล้วลองใหม่อีกครั้ง',
