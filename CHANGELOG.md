@@ -6,6 +6,16 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.6.1] — 2026-07-06
+
+### Added
+
+- **Line-by-line practice: auto-stop + voice gauge.** In line-by-line mode the reader no longer has to
+  tap **Stop** to end a line — once they've spoken, ~5 s of trailing silence (configurable
+  3 / 4 / 5 / 8 / 10 s; 60 s hard cap) finalizes and scores the line automatically, still as one
+  recognition request per line. A live **microphone-level gauge** shows the input while recording, and
+  the Stop button is relabeled **Done reading** as an explicit manual fallback.
+
 ## [1.6.0] — 2026-07-06
 
 ### Added
@@ -157,7 +167,8 @@ First public release — a free, 100% client-side, offline dyslexia reading aid 
 - **Engineering system** — `docs/plans/` (ROADMAP, HLD, FRD, WBS, ADRs), GitHub Actions CI
   (lint → typecheck → coverage → build) and a tag-driven GHCR release.
 
-[Unreleased]: https://github.com/lumduan/opendys/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/lumduan/opendys/compare/v1.6.1...HEAD
+[1.6.1]: https://github.com/lumduan/opendys/compare/v1.6.0...v1.6.1
 [1.3.0]: https://github.com/lumduan/opendys/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/lumduan/opendys/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/lumduan/opendys/compare/v1.0.1...v1.1.0
