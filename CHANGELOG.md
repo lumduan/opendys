@@ -6,6 +6,34 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-07-06
+
+### Added
+
+- **Line-by-line reading practice.** A new **Line by line** option in the reader's Practice controls
+  (alongside whole-passage): click any line and it is read aloud via TTS (optional — toggle the
+  **🔊 TTS preview** off to read cold), then your reading of that one line is recorded and graded —
+  accuracy, missed/mispronounced words, and inline green/red coloring — over the same opt-in Typhoon
+  ASR path. Each line is a single on-demand recognition request, so feedback stays snappy. (Off by
+  default; a deployment without a `TYPHOON_API` key never shows it.)
+
+- **Editable OCR text.** The recognized-text panel now has an **Edit** button next to **Copy**: tap it
+  to correct any mis-recognized words or phrases in a textarea, then **Done** to read, hear, copy, or
+  practice the corrected text. The Reader already resets any prior assessment when the text changes.
+
+### Changed
+
+- **Reading practice is line-by-line instead of word-by-word.** The previous "word by word" guided
+  karaoke mode sent a recognition request for every spoken utterance and blocked the live cursor on
+  each server round-trip, which made it laggy and ineffective. It is replaced by the line-by-line mode
+  above (one round-trip per line, on demand). The **Skip** button and the "Word X / N" guided-progress
+  readout were removed with it.
+
+### Removed
+
+- Word-by-word "guided" practice mode (the karaoke cursor, the **Skip** button, and the per-word
+  progress readout) — superseded by line-by-line practice.
+
 ## [1.5.0] — 2026-07-05
 
 ### Added
