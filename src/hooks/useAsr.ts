@@ -4,7 +4,6 @@ import {
   concatFloat32,
   encodeWav,
   evaluate,
-  guidedEvaluate,
   joinWindows,
   summarize,
   tokenizeTarget,
@@ -21,8 +20,8 @@ import {
 
 export type AsrStatus = 'idle' | 'requesting' | 'recording' | 'processing' | 'done' | 'error';
 
-/** `free` = grade the whole passage continuously; `guided` = advance one word at a time (karaoke). */
-export type AsrMode = 'free' | 'guided';
+/** `free` = grade the whole passage continuously; `line` = grade one clicked line at a time. */
+export type AsrMode = 'free' | 'line';
 
 export type AsrErrorKey =
   | 'unsupported'
@@ -44,15 +43,13 @@ export interface UseAsrResult {
   error: AsrErrorKey | null;
   /** The growing transcript across capture windows. */
   hypothesis: string;
-  /** The latest assessment. In guided mode `frontier` is the current word cursor. */
+  /** The latest assessment. */
   evaluation: AsrEvaluation | null;
-  /** Set when a session finishes (manual stop OR guided auto-finish) so the caller can persist it. */
+  /** Set when a session finishes (manual stop) so the caller can persist it. */
   session: AsrSession | null;
-  start: (target: string, lang: SpeechLang, mode?: AsrMode) => Promise<void>;
+  start: (target: string, lang: SpeechLang, mode?: AsrMode, lineChunkIndex?: number) => Promise<void>;
   /** Stop capture and return the finalized session (null if nothing read). */
-  stop: () => AsrSession | null;
-  /** Guided mode only: skip the current word (marks it red) and advance the cursor. */
-  skip: () => void;
+  stop: () => Promise<AsrSession | null>;
   reset: () => void;
 }
 
@@ -63,11 +60,6 @@ interface WindowWithWebkitAudio {
 
 /** Free-mode fixed capture window. ~4 s keeps requests well under Typhoon's 100 req/min. */
 const WINDOW_MS = 4000;
-/** Guided mode uses pause detection instead of a fixed window: flush an utterance after this much
- *  trailing silence, or once it reaches the hard cap. RMS above the threshold counts as speech. */
-const GUIDED_SILENCE_MS = 600;
-const GUIDED_MAX_UTTER_MS = 6000;
-const SPEECH_RMS_THRESHOLD = 0.012;
 const WORKLET_URL = '/asr-recorder.worklet.js';
 const WORKLET_NAME = 'asr-recorder';
 
@@ -75,14 +67,6 @@ function resolveAudioContextCtor(): typeof AudioContext | null {
   if (typeof window === 'undefined') return null;
   const w = window as unknown as WindowWithWebkitAudio;
   return w.AudioContext ?? w.webkitAudioContext ?? null;
-}
-
-/** Root-mean-square level of a PCM frame (cheap voice-activity signal). */
-function rms(frame: Float32Array): number {
-  if (frame.length === 0) return 0;
-  let sum = 0;
-  for (let i = 0; i < frame.length; i += 1) sum += frame[i] * frame[i];
-  return Math.sqrt(sum / frame.length);
 }
 
 /** Map a Typhoon ASR failure to a localized error key; anything unexpected is a generic cloud failure. */
@@ -98,10 +82,11 @@ function asrErrorKey(err: unknown): AsrErrorKey {
 /**
  * Drive a real-time reading-assessment session. Mirrors `useOcr`/`useSpeech`: a monotonic `jobId`
  * guards against superseded work, the Typhoon client is created lazily (StrictMode-safe), and capture
- * is torn down on unmount. Capture uses a self-hosted AudioWorklet → WAV window POST (batch Typhoon).
+ * is torn down on unmount. Capture uses a self-hosted AudioWorklet → WAV POST.
  *
- * Two modes: **free** (fixed ~4 s windows, whole-passage grading) and **guided** (word-by-word — flush
- * on the reader's natural pauses, advance a single cursor through only leading correctly-read words).
+ * Two modes: **free** (fixed ~4 s windows, whole-passage grading) and **line** (one clicked line at a
+ * time — the whole line is captured, then a single on-demand transcription runs on stop, so feedback
+ * is one short round-trip per line instead of a continuous per-utterance stream).
  */
 export function useAsr(): UseAsrResult {
   const supported = useMemo(
@@ -137,10 +122,10 @@ export function useAsr(): UseAsrResult {
   const langRef = useRef<SpeechLang>('en');
   const targetRef = useRef('');
   const modeRef = useRef<AsrMode>('free');
-  const skippedRef = useRef<Set<number>>(new Set());
-  const hasSpeechRef = useRef(false);
-  const silenceMsRef = useRef(0);
-  const utterMsRef = useRef(0);
+  /** The active job's transcribe function, so `stop()` can fire one final on-demand transcription. */
+  const transcribeRef = useRef<((blob: Blob) => Promise<void>) | null>(null);
+  /** In `line` mode, the real chunk index of the line being graded (for highlight localization). */
+  const lineChunkIndexRef = useRef<number | null>(null);
 
   const getClient = useCallback((): TyphoonAsrClient => {
     if (!clientRef.current) clientRef.current = createTyphoonAsrClient();
@@ -191,36 +176,15 @@ export function useAsr(): UseAsrResult {
   useEffect(() => {
     return () => {
       runningRef.current = false;
+      transcribeRef.current = null;
       cleanupCapture();
       void clientRef.current?.terminate();
       clientRef.current = null;
     };
   }, [cleanupCapture]);
 
-  // Finish a guided session (reader reached the last word, or skipped to the end): stop capture, grade,
-  // and expose the session for the caller to persist.
-  const finalizeGuided = useCallback(() => {
-    runningRef.current = false;
-    cleanupCapture();
-    const hyp = joinWindows(windowsRef.current);
-    const finalEval = guidedEvaluate(tokensRef.current, hyp, tokensRef.current.length, {}, skippedRef.current);
-    frontierRef.current = finalEval.frontier;
-    setEvaluation(finalEval);
-    setStatus('done');
-    if (tokensRef.current.length > 0) {
-      setSession(
-        summarize(finalEval, {
-          id: crypto.randomUUID(),
-          date: new Date().toISOString(),
-          lang: langRef.current,
-          target: targetRef.current,
-        }),
-      );
-    }
-  }, [cleanupCapture]);
-
   const start = useCallback(
-    async (target: string, lang: SpeechLang, startMode: AsrMode = 'free') => {
+    async (target: string, lang: SpeechLang, startMode: AsrMode = 'free', lineChunkIndex?: number) => {
       if (!supported) {
         setStatus('error');
         setError('unsupported');
@@ -231,13 +195,19 @@ export function useAsr(): UseAsrResult {
       cleanupCapture();
       runningRef.current = false;
       modeRef.current = startMode;
-      skippedRef.current = new Set();
-      hasSpeechRef.current = false;
-      silenceMsRef.current = 0;
-      utterMsRef.current = 0;
-      tokensRef.current = tokenizeTarget(splitSpeechChunks(target));
-      windowsRef.current = [];
       frontierRef.current = 0;
+      // Tokenize the target. In `line` mode the target is a single line; tokenizeTarget would tag its
+      // tokens with chunkIndex 0, so remap them to the real clicked-line index — that keeps the
+      // highlight pipeline (which paints via [data-chunk-index]) on the correct line in the surface.
+      const sourceChunks =
+        startMode === 'line' ? [{ raw: target, speak: target.trim() }] : splitSpeechChunks(target);
+      const baseTokens = tokenizeTarget(sourceChunks);
+      tokensRef.current =
+        startMode === 'line' && lineChunkIndex != null
+          ? baseTokens.map((tk) => ({ ...tk, chunkIndex: lineChunkIndex }))
+          : baseTokens;
+      lineChunkIndexRef.current = startMode === 'line' ? (lineChunkIndex ?? 0) : null;
+      windowsRef.current = [];
       pcmRef.current = [];
       targetRef.current = target;
       langRef.current = lang;
@@ -274,20 +244,10 @@ export function useAsr(): UseAsrResult {
           if (jobId !== jobIdRef.current || text.trim() === '') return;
           windowsRef.current.push(text);
           const hyp = joinWindows(windowsRef.current);
-          const result =
-            modeRef.current === 'guided'
-              ? guidedEvaluate(tokensRef.current, hyp, frontierRef.current, {}, skippedRef.current)
-              : evaluate(tokensRef.current, hyp, frontierRef.current);
+          const result = evaluate(tokensRef.current, hyp, frontierRef.current);
           frontierRef.current = result.frontier;
           setHypothesis(hyp);
           setEvaluation(result);
-          if (
-            modeRef.current === 'guided' &&
-            tokensRef.current.length > 0 &&
-            result.frontier >= tokensRef.current.length
-          ) {
-            finalizeGuided();
-          }
         } catch (err) {
           if (jobId !== jobIdRef.current) return;
           if (err instanceof DOMException && err.name === 'AbortError') return;
@@ -297,14 +257,12 @@ export function useAsr(): UseAsrResult {
           setStatus('error');
         }
       };
+      transcribeRef.current = transcribeWindow;
 
-      // Encode the buffered PCM as a WAV window and POST it; reset the utterance accumulators.
+      // Encode the buffered PCM as a WAV window and POST it; reset the buffer.
       const flushWindow = (): void => {
         const frames = pcmRef.current;
         pcmRef.current = [];
-        hasSpeechRef.current = false;
-        silenceMsRef.current = 0;
-        utterMsRef.current = 0;
         if (frames.length === 0) return;
         const wav = encodeWav(concatFloat32(frames), sampleRateRef.current);
         void transcribeWindow(new Blob([wav], { type: WAV_MIME }));
@@ -325,26 +283,8 @@ export function useAsr(): UseAsrResult {
         const node = new AudioWorkletNode(ctx, WORKLET_NAME);
         node.port.onmessage = (event: MessageEvent) => {
           if (jobId !== jobIdRef.current || !runningRef.current || !event.data) return;
-          const frame = event.data as Float32Array;
-          if (modeRef.current === 'guided') {
-            // Voice-activity gate: accumulate a spoken word, flush it on a short pause (or the cap).
-            const frameMs = (frame.length / sampleRateRef.current) * 1000;
-            if (rms(frame) > SPEECH_RMS_THRESHOLD) {
-              hasSpeechRef.current = true;
-              silenceMsRef.current = 0;
-            } else if (hasSpeechRef.current) {
-              silenceMsRef.current += frameMs;
-            }
-            if (hasSpeechRef.current) {
-              pcmRef.current.push(frame);
-              utterMsRef.current += frameMs;
-              if (silenceMsRef.current >= GUIDED_SILENCE_MS || utterMsRef.current >= GUIDED_MAX_UTTER_MS) {
-                flushWindow();
-              }
-            }
-          } else {
-            pcmRef.current.push(frame);
-          }
+          // Both modes simply buffer PCM: free flushes on a timer, line flushes once on stop.
+          pcmRef.current.push(event.data as Float32Array);
         };
         source.connect(node);
         node.connect(ctx.destination); // pulls the graph; the worklet outputs silence (no mic feedback)
@@ -353,7 +293,7 @@ export function useAsr(): UseAsrResult {
         runningRef.current = true;
         setStatus('recording');
 
-        // Free mode flushes on a fixed timer; guided mode flushes on pauses (in the worklet handler).
+        // Free mode flushes on a fixed timer; line mode captures the whole line and flushes on stop.
         if (startMode === 'free') {
           windowTimerRef.current = window.setInterval(() => {
             if (jobId !== jobIdRef.current || !runningRef.current) return;
@@ -368,57 +308,51 @@ export function useAsr(): UseAsrResult {
         setError('micUnavailable');
       }
     },
-    [supported, cleanupCapture, getClient, finalizeGuided],
+    [supported, cleanupCapture, getClient],
   );
 
-  const stop = useCallback((): AsrSession | null => {
-    runningRef.current = false;
+  const stop = useCallback((): Promise<AsrSession | null> => {
     setStatus('processing');
+    // Grab any unflushed audio BEFORE cleanup clears the buffer. In line mode nothing has been sent yet
+    // (no timer), so this is the single, on-demand transcription for the whole line. runningRef stays
+    // true until after that transcription so it passes transcribeWindow's guard; cleanup has already
+    // stopped the mic, so no new frames arrive meanwhile.
+    const frames = pcmRef.current;
+    pcmRef.current = [];
     cleanupCapture();
 
-    const hyp = joinWindows(windowsRef.current);
-    const finalEval =
-      modeRef.current === 'guided'
-        ? guidedEvaluate(tokensRef.current, hyp, frontierRef.current, {}, skippedRef.current)
-        : evaluate(tokensRef.current, hyp, tokensRef.current.length);
-    setHypothesis(hyp);
-    setEvaluation(finalEval);
-    setStatus('done');
+    const finish = (): AsrSession | null => {
+      runningRef.current = false;
+      const hyp = joinWindows(windowsRef.current);
+      const finalEval = evaluate(tokensRef.current, hyp, tokensRef.current.length);
+      setHypothesis(hyp);
+      setEvaluation(finalEval);
+      setStatus('done');
+      if (tokensRef.current.length === 0) return null;
+      const finished = summarize(finalEval, {
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        lang: langRef.current,
+        target: targetRef.current,
+      });
+      setSession(finished);
+      return finished;
+    };
 
-    if (tokensRef.current.length === 0) return null;
-    const finished = summarize(finalEval, {
-      id: crypto.randomUUID(),
-      date: new Date().toISOString(),
-      lang: langRef.current,
-      target: targetRef.current,
-    });
-    setSession(finished);
-    return finished;
-  }, [cleanupCapture]);
-
-  const skip = useCallback(() => {
-    if (modeRef.current !== 'guided' || !runningRef.current) return;
-    const cursor = frontierRef.current;
-    if (cursor >= tokensRef.current.length) return;
-    skippedRef.current.add(cursor);
-    const hyp = joinWindows(windowsRef.current);
-    const result = guidedEvaluate(tokensRef.current, hyp, cursor, {}, skippedRef.current);
-    frontierRef.current = result.frontier;
-    setEvaluation(result);
-    if (tokensRef.current.length > 0 && result.frontier >= tokensRef.current.length) {
-      finalizeGuided();
+    if (modeRef.current === 'line' && frames.length > 0 && transcribeRef.current) {
+      const wav = encodeWav(concatFloat32(frames), sampleRateRef.current);
+      return transcribeRef.current(new Blob([wav], { type: WAV_MIME })).then(() => finish());
     }
-  }, [finalizeGuided]);
+    return Promise.resolve(finish());
+  }, [cleanupCapture]);
 
   const reset = useCallback(() => {
     jobIdRef.current += 1;
     runningRef.current = false;
+    transcribeRef.current = null;
+    lineChunkIndexRef.current = null;
     cleanupCapture();
     modeRef.current = 'free';
-    skippedRef.current = new Set();
-    hasSpeechRef.current = false;
-    silenceMsRef.current = 0;
-    utterMsRef.current = 0;
     windowsRef.current = [];
     frontierRef.current = 0;
     tokensRef.current = [];
@@ -441,7 +375,6 @@ export function useAsr(): UseAsrResult {
     session,
     start,
     stop,
-    skip,
     reset,
   };
 }

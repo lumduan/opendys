@@ -2,8 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { UseAsrResult } from '@/hooks/useAsr';
 import type { UseSpeechResult } from '@/hooks/useSpeech';
-import { guidedEvaluate, tokenizeTarget, type AsrSession } from '@/utils/asr';
-import { splitSpeechChunks } from '@/utils/reader';
+import type { AsrSession } from '@/utils/asr';
 
 // Mutable holders so each test can set hook state before rendering (hoisted above the vi.mock factories).
 const { asrHolder, speechHolder, saveMock } = vi.hoisted(() => ({
@@ -31,8 +30,7 @@ function makeAsr(over: Partial<UseAsrResult> = {}): UseAsrResult {
     evaluation: null,
     session: null,
     start: vi.fn(async () => {}),
-    stop: vi.fn(() => null),
-    skip: vi.fn(),
+    stop: vi.fn(async () => null),
     reset: vi.fn(),
     ...over,
   };
@@ -65,8 +63,6 @@ const sessionFixture: AsrSession = {
   mispronounced: [],
   skipped: [],
 };
-
-const guidedEval = (hyp: string) => guidedEvaluate(tokenizeTarget(splitSpeechChunks('the cat')), hyp);
 
 beforeEach(() => {
   saveMock.mockClear();
@@ -129,19 +125,34 @@ describe('Reader — Practice control', () => {
     expect(saveMock).toHaveBeenCalledWith(sessionFixture);
   });
 
-  it('starts guided mode when the Word-by-word toggle is selected', () => {
+  it('line mode: the toggle reveals the TTS preview control and a tap-line hint (no Practice button)', () => {
     render(<Reader text="the cat" lang="en" />);
-    fireEvent.click(screen.getByTestId('mode-guided'));
-    fireEvent.click(screen.getByTestId('practice'));
-    expect(asrHolder.current.start).toHaveBeenCalledWith('the cat', 'en', 'guided');
+    fireEvent.click(screen.getByTestId('mode-line'));
+    expect(screen.getByTestId('tts-preview-toggle')).toBeInTheDocument();
+    expect(screen.getByTestId('line-hint')).toBeInTheDocument();
+    expect(screen.queryByTestId('practice')).toBeNull(); // practice starts by tapping a line
   });
 
-  it('guided: shows progress + Skip while recording and calls skip()', () => {
-    asrHolder.current = makeAsr({ status: 'recording', mode: 'guided', evaluation: guidedEval('the') });
-    render(<Reader text="the cat" lang="en" />);
-    expect(screen.getByTestId('asr-guided-readout')).toBeInTheDocument();
-    expect(screen.queryByTestId('asr-readout')).toBeNull(); // no free-mode accuracy readout
-    fireEvent.click(screen.getByTestId('asr-skip'));
-    expect(asrHolder.current.skip).toHaveBeenCalled();
+  it('line mode: clicking a line plays the TTS preview and defers recording until it ends', () => {
+    const { container } = render(<Reader text="the cat" lang="en" />);
+    fireEvent.click(screen.getByTestId('mode-line'));
+    fireEvent.click(container.querySelector('[data-chunk-index="0"]') as HTMLElement);
+    expect(speechHolder.current.stop).toHaveBeenCalled();
+    expect(speechHolder.current.speakChunk).toHaveBeenCalledWith(
+      'the cat',
+      'en',
+      0,
+      expect.any(Number),
+      expect.any(Function),
+    );
+    expect(asrHolder.current.start).not.toHaveBeenCalled(); // recording starts on TTS end, not now
+  });
+
+  it('line mode: with TTS preview off, clicking a line records immediately', () => {
+    const { container } = render(<Reader text="the cat" lang="en" />);
+    fireEvent.click(screen.getByTestId('mode-line'));
+    fireEvent.click(screen.getByTestId('tts-preview-toggle')); // disable the preview
+    fireEvent.click(container.querySelector('[data-chunk-index="0"]') as HTMLElement);
+    expect(asrHolder.current.start).toHaveBeenCalledWith('the cat', 'en', 'line', 0);
   });
 });

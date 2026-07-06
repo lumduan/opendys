@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { splitSpeechChunks } from '@/utils/reader';
 import { tokenizeTarget } from './tokenizeTarget';
-import { evaluate, guidedEvaluate, joinWindows } from './session';
+import { evaluate, joinWindows } from './session';
 
 const targetTokens = () => tokenizeTarget(splitSpeechChunks('the cat sat'));
 
@@ -69,47 +69,5 @@ describe('joinWindows', () => {
   });
   it('collapses all-empty windows to an empty string', () => {
     expect(joinWindows(['', '  '])).toBe('');
-  });
-});
-
-describe('guidedEvaluate', () => {
-  it('advances the cursor only through leading correctly-read words', () => {
-    const tokens = targetTokens();
-    expect(guidedEvaluate(tokens, '').frontier).toBe(0); // nothing read → waits on word 0
-    expect(guidedEvaluate(tokens, 'the').frontier).toBe(1);
-    expect(guidedEvaluate(tokens, 'the cat').frontier).toBe(2);
-    const done = guidedEvaluate(tokens, 'the cat sat');
-    expect(done.frontier).toBe(3); // === tokens.length ⇒ finished
-    expect(done.status).toEqual(['correct', 'correct', 'correct']);
-  });
-
-  it('waits on the current word — a later word does not skip ahead', () => {
-    const e = guidedEvaluate(targetTokens(), 'cat'); // said "cat" but "the" not read yet
-    expect(e.frontier).toBe(0);
-    expect(e.status).toEqual(['pending', 'pending', 'pending']);
-  });
-
-  it('never retreats below the previous cursor', () => {
-    expect(guidedEvaluate(targetTokens(), 'the', 2).frontier).toBe(2);
-  });
-
-  it('marks a skipped word red and advances past it', () => {
-    const e = guidedEvaluate(targetTokens(), '', 0, {}, new Set([0]));
-    expect(e.frontier).toBe(1);
-    expect(e.status[0]).toBe('skipped');
-    expect(e.skipped).toEqual(['the']);
-  });
-
-  it('advances per Thai syllable', () => {
-    const tokens = tokenizeTarget(splitSpeechChunks('กขค'));
-    expect(guidedEvaluate(tokens, 'ก').frontier).toBe(1);
-    expect(guidedEvaluate(tokens, 'ก ข ค').frontier).toBe(3);
-  });
-
-  it('handles an empty target', () => {
-    const e = guidedEvaluate([], 'anything');
-    expect(e.frontier).toBe(0);
-    expect(e.accuracy).toBe(0);
-    expect(e.status).toEqual([]);
   });
 });

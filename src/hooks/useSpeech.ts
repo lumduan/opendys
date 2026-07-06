@@ -28,8 +28,9 @@ export interface UseSpeechResult {
   activeWord: ActiveWord | null;
   /** Read a whole passage, one utterance per sentence-chunk (highlights each as it plays). */
   speak: (text: string, lang: SpeechLang, rate?: number) => void;
-  /** Read one chunk (e.g. a tapped sentence) and highlight the given chunk index. */
-  speakChunk: (text: string, lang: SpeechLang, chunkIndex: number, rate?: number) => void;
+  /** Read one chunk (e.g. a tapped sentence) and highlight the given chunk index. `onEnd` (optional)
+   *  fires when the chunk finishes naturally — used by line practice to chain TTS preview → record. */
+  speakChunk: (text: string, lang: SpeechLang, chunkIndex: number, rate?: number, onEnd?: () => void) => void;
   stop: () => void;
 }
 
@@ -95,7 +96,7 @@ export function useSpeech(): UseSpeechResult {
     setActiveWord(null);
   }, []);
 
-  const enqueue = useCallback((items: SpeakItem[], lang: SpeechLang, rate: number) => {
+  const enqueue = useCallback((items: SpeakItem[], lang: SpeechLang, rate: number, onEnd?: () => void) => {
     if (!hasSpeech()) return;
     const synth = window.speechSynthesis;
     const voice = pickVoice(synth.getVoices(), lang);
@@ -138,6 +139,7 @@ export function useSpeech(): UseSpeechResult {
             setSpeaking(false);
             setActiveChunkIndex(null);
             setActiveWord(null);
+            onEnd?.(); // natural completion only — cancel()/stop() bumps jobId, so this stays silent
           }
         };
       }
@@ -154,8 +156,8 @@ export function useSpeech(): UseSpeechResult {
   );
 
   const speakChunk = useCallback(
-    (text: string, lang: SpeechLang, chunkIndex: number, rate = 1) => {
-      enqueue([{ speak: text.trim(), index: chunkIndex }], lang, rate);
+    (text: string, lang: SpeechLang, chunkIndex: number, rate = 1, onEnd?: () => void) => {
+      enqueue([{ speak: text.trim(), index: chunkIndex }], lang, rate, onEnd);
     },
     [enqueue],
   );
