@@ -47,7 +47,15 @@ export interface UseAsrResult {
   evaluation: AsrEvaluation | null;
   /** Set when a session finishes (manual stop) so the caller can persist it. */
   session: AsrSession | null;
-  start: (target: string, lang: SpeechLang, mode?: AsrMode, lineChunkIndex?: number) => Promise<void>;
+  /** Live microphone level in [0,1] while recording (0 when idle). Drives the voice gauge. */
+  micLevel: number;
+  start: (
+    target: string,
+    lang: SpeechLang,
+    mode?: AsrMode,
+    lineChunkIndex?: number,
+    lineSilenceMs?: number,
+  ) => Promise<void>;
   /** Stop capture and return the finalized session (null if nothing read). */
   stop: () => Promise<AsrSession | null>;
   reset: () => void;
@@ -62,11 +70,30 @@ interface WindowWithWebkitAudio {
 const WINDOW_MS = 4000;
 const WORKLET_URL = '/asr-recorder.worklet.js';
 const WORKLET_NAME = 'asr-recorder';
+/** Voice-activity threshold (RMS). Frames above this count as "speaking" — drives the line-mode silence
+ *  auto-stop and the mic-level gauge. */
+const SPEECH_RMS_THRESHOLD = 0.012;
+/** Line mode: stop + analyze after this much trailing silence once the reader has spoken (default). */
+const LINE_DEFAULT_SILENCE_MS = 5000;
+/** Line mode: hard cap so a never-quiet / never-reads session can't record forever. */
+const LINE_MAX_MS = 60000;
+/** Mic-level UI pushes are throttled to ~12 fps (the worklet posts a frame every ~2.7 ms). */
+const LEVEL_PUSH_INTERVAL_MS = 80;
+/** Scale raw RMS into a 0–1 gauge value (speech RMS is typically 0.02–0.2). */
+const LEVEL_SCALE = 6;
 
 function resolveAudioContextCtor(): typeof AudioContext | null {
   if (typeof window === 'undefined') return null;
   const w = window as unknown as WindowWithWebkitAudio;
   return w.AudioContext ?? w.webkitAudioContext ?? null;
+}
+
+/** Root-mean-square level of a PCM frame (cheap voice-activity / mic-level signal). */
+function rms(frame: Float32Array): number {
+  if (frame.length === 0) return 0;
+  let sum = 0;
+  for (let i = 0; i < frame.length; i += 1) sum += frame[i] * frame[i];
+  return Math.sqrt(sum / frame.length);
 }
 
 /** Map a Typhoon ASR failure to a localized error key; anything unexpected is a generic cloud failure. */
@@ -105,6 +132,7 @@ export function useAsr(): UseAsrResult {
   const [hypothesis, setHypothesis] = useState('');
   const [evaluation, setEvaluation] = useState<AsrEvaluation | null>(null);
   const [session, setSession] = useState<AsrSession | null>(null);
+  const [micLevel, setMicLevel] = useState(0);
 
   const jobIdRef = useRef(0);
   const clientRef = useRef<TyphoonAsrClient | null>(null);
@@ -126,6 +154,17 @@ export function useAsr(): UseAsrResult {
   const transcribeRef = useRef<((blob: Blob) => Promise<void>) | null>(null);
   /** In `line` mode, the real chunk index of the line being graded (for highlight localization). */
   const lineChunkIndexRef = useRef<number | null>(null);
+  // Voice-activity + auto-stop state (line mode). Refs, not state, so the per-frame worklet handler
+  // can update them without re-rendering on every audio quantum.
+  const levelRef = useRef(0);
+  const lastLevelPushRef = useRef(0);
+  const hasSpeechRef = useRef(false);
+  const silenceMsRef = useRef(0);
+  const elapsedMsRef = useRef(0);
+  const lineSilenceMsRef = useRef(LINE_DEFAULT_SILENCE_MS);
+  const autoStopFiredRef = useRef(false);
+  const stoppingRef = useRef(false);
+  const stopRef = useRef<(() => Promise<AsrSession | null>) | null>(null);
 
   const getClient = useCallback((): TyphoonAsrClient => {
     if (!clientRef.current) clientRef.current = createTyphoonAsrClient();
@@ -184,7 +223,13 @@ export function useAsr(): UseAsrResult {
   }, [cleanupCapture]);
 
   const start = useCallback(
-    async (target: string, lang: SpeechLang, startMode: AsrMode = 'free', lineChunkIndex?: number) => {
+    async (
+      target: string,
+      lang: SpeechLang,
+      startMode: AsrMode = 'free',
+      lineChunkIndex?: number,
+      lineSilenceMs?: number,
+    ) => {
       if (!supported) {
         setStatus('error');
         setError('unsupported');
@@ -196,6 +241,15 @@ export function useAsr(): UseAsrResult {
       runningRef.current = false;
       modeRef.current = startMode;
       frontierRef.current = 0;
+      // Reset the voice-activity / auto-stop accumulators for this session.
+      lineSilenceMsRef.current = lineSilenceMs ?? LINE_DEFAULT_SILENCE_MS;
+      hasSpeechRef.current = false;
+      silenceMsRef.current = 0;
+      elapsedMsRef.current = 0;
+      autoStopFiredRef.current = false;
+      stoppingRef.current = false;
+      levelRef.current = 0;
+      lastLevelPushRef.current = 0;
       // Tokenize the target. In `line` mode the target is a single line; tokenizeTarget would tag its
       // tokens with chunkIndex 0, so remap them to the real clicked-line index — that keeps the
       // highlight pipeline (which paints via [data-chunk-index]) on the correct line in the surface.
@@ -283,8 +337,37 @@ export function useAsr(): UseAsrResult {
         const node = new AudioWorkletNode(ctx, WORKLET_NAME);
         node.port.onmessage = (event: MessageEvent) => {
           if (jobId !== jobIdRef.current || !runningRef.current || !event.data) return;
-          // Both modes simply buffer PCM: free flushes on a timer, line flushes once on stop.
-          pcmRef.current.push(event.data as Float32Array);
+          const frame = event.data as Float32Array;
+          pcmRef.current.push(frame);
+          // Mic level + voice activity (both modes). Throttle the UI push: the worklet posts ~one
+          // quantum per message, so per-frame setState would thrash React.
+          const level = rms(frame);
+          levelRef.current = level;
+          const now = performance.now();
+          if (now - lastLevelPushRef.current > LEVEL_PUSH_INTERVAL_MS) {
+            lastLevelPushRef.current = now;
+            setMicLevel(Math.min(1, level * LEVEL_SCALE));
+          }
+          const frameMs = (frame.length / sampleRateRef.current) * 1000;
+          if (level > SPEECH_RMS_THRESHOLD) {
+            hasSpeechRef.current = true;
+            silenceMsRef.current = 0;
+          } else if (hasSpeechRef.current) {
+            silenceMsRef.current += frameMs;
+          }
+          elapsedMsRef.current += frameMs;
+          // Line mode: auto-stop once the reader trails off (after speech) past the silence threshold,
+          // or at the hard cap. One shot — the stoppingRef guard in stop() absorbs a manual-Done race.
+          if (
+            modeRef.current === 'line' &&
+            !autoStopFiredRef.current &&
+            !stoppingRef.current &&
+            ((hasSpeechRef.current && silenceMsRef.current >= lineSilenceMsRef.current) ||
+              elapsedMsRef.current >= LINE_MAX_MS)
+          ) {
+            autoStopFiredRef.current = true;
+            void stopRef.current?.();
+          }
         };
         source.connect(node);
         node.connect(ctx.destination); // pulls the graph; the worklet outputs silence (no mic feedback)
@@ -312,6 +395,8 @@ export function useAsr(): UseAsrResult {
   );
 
   const stop = useCallback((): Promise<AsrSession | null> => {
+    if (stoppingRef.current) return Promise.resolve(null); // a manual Done + an auto-stop can't both finalize
+    stoppingRef.current = true;
     setStatus('processing');
     // Grab any unflushed audio BEFORE cleanup clears the buffer. In line mode nothing has been sent yet
     // (no timer), so this is the single, on-demand transcription for the whole line. runningRef stays
@@ -323,6 +408,7 @@ export function useAsr(): UseAsrResult {
 
     const finish = (): AsrSession | null => {
       runningRef.current = false;
+      setMicLevel(0);
       const hyp = joinWindows(windowsRef.current);
       const finalEval = evaluate(tokensRef.current, hyp, tokensRef.current.length);
       setHypothesis(hyp);
@@ -346,6 +432,12 @@ export function useAsr(): UseAsrResult {
     return Promise.resolve(finish());
   }, [cleanupCapture]);
 
+  // Keep a ref to the latest stop() so the per-frame worklet handler (defined inside start's closure)
+  // can fire the auto-stop without capturing a stale function.
+  useEffect(() => {
+    stopRef.current = stop;
+  }, [stop]);
+
   const reset = useCallback(() => {
     jobIdRef.current += 1;
     runningRef.current = false;
@@ -356,12 +448,19 @@ export function useAsr(): UseAsrResult {
     windowsRef.current = [];
     frontierRef.current = 0;
     tokensRef.current = [];
+    hasSpeechRef.current = false;
+    silenceMsRef.current = 0;
+    elapsedMsRef.current = 0;
+    autoStopFiredRef.current = false;
+    stoppingRef.current = false;
+    levelRef.current = 0;
     setMode('free');
     setSession(null);
     setStatus('idle');
     setError(null);
     setHypothesis('');
     setEvaluation(null);
+    setMicLevel(0);
   }, [cleanupCapture]);
 
   return {
@@ -373,6 +472,7 @@ export function useAsr(): UseAsrResult {
     hypothesis,
     evaluation,
     session,
+    micLevel,
     start,
     stop,
     reset,

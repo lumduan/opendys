@@ -229,4 +229,24 @@ describe('useAsr', () => {
     expect(tokens.length).toBe(2);
     expect(tokens.every((t) => t.chunkIndex === 3)).toBe(true);
   });
+
+  it('line mode auto-stops after the configured silence once the reader has spoken', async () => {
+    const { result } = renderHook(() => useAsr());
+    await act(async () => {
+      await result.current.start('the cat', 'en', 'line', 0, 100); // 100 ms silence threshold
+    });
+    expect(result.current.status).toBe('recording');
+
+    await act(async () => {
+      // one "speech" frame (rms 0.1 > threshold) sets hasSpeech, then ~166 ms of silence → auto-stop
+      MockAudioWorkletNode.last?.feed(new Float32Array(1600).fill(0.1));
+      for (let i = 0; i < 5; i += 1) MockAudioWorkletNode.last?.feed(new Float32Array(1600));
+      await flush();
+    });
+
+    await waitFor(() => expect(result.current.status).toBe('done'));
+    expect(transcribeMock).toHaveBeenCalledTimes(1); // one round-trip, with no manual stop()
+    expect(result.current.evaluation?.accuracy).toBe(1);
+    expect(typeof result.current.micLevel).toBe('number');
+  });
 });
