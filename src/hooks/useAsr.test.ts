@@ -1,6 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useAsr } from './useAsr';
+import type { AsrSession } from '@/utils/asr';
 import { TyphoonAsrError } from '@/services/asr/typhoonAsrClient';
 
 const transcribeMock = vi.fn();
@@ -148,9 +149,9 @@ describe('useAsr', () => {
       expect(result.current.hypothesis).toContain('the cat');
       expect(result.current.evaluation?.accuracy).toBe(1);
 
-      let session: ReturnType<typeof result.current.stop> = null;
-      act(() => {
-        session = result.current.stop();
+      let session: AsrSession | null = null;
+      await act(async () => {
+        session = await result.current.stop();
       });
       expect(result.current.status).toBe('done');
       expect(session).toMatchObject({ target: 'the cat', lang: 'en', accuracy: 1 });
@@ -192,52 +193,40 @@ describe('useAsr', () => {
     expect(result.current.hypothesis).toBe('');
   });
 
-  // Guided mode flushes on a pause (VAD) rather than a timer: feed a "speech" frame then a long
-  // "silence" frame (~666 ms > the 600 ms threshold) to trigger one utterance flush.
-  const sayThenPause = (transcript: string) => {
-    transcribeMock.mockResolvedValueOnce({ text: transcript });
-    MockAudioWorkletNode.last?.feed(new Float32Array(1600).fill(0.1)); // speech (rms 0.1)
-    MockAudioWorkletNode.last?.feed(new Float32Array(32000)); // ~666 ms silence → flush
-  };
-
-  it('guided mode advances the cursor one word at a time', async () => {
+  it('line mode captures the whole line and scores it on stop with one transcription', async () => {
     const { result } = renderHook(() => useAsr());
     await act(async () => {
-      await result.current.start('the cat', 'en', 'guided');
+      await result.current.start('the cat', 'en', 'line', 0);
     });
-    expect(result.current.mode).toBe('guided');
+    expect(result.current.mode).toBe('line');
     expect(result.current.status).toBe('recording');
 
     await act(async () => {
-      sayThenPause('the'); // read only the first word
+      MockAudioWorkletNode.last?.feed(new Float32Array(1600)); // buffered only — line mode has no timer
       await flush();
     });
-    expect(result.current.evaluation?.frontier).toBe(1); // cursor moved past "the", waits on "cat"
-    expect(result.current.evaluation?.status[0]).toBe('correct');
-    expect(result.current.status).toBe('recording'); // not finished
-  });
+    expect(transcribeMock).not.toHaveBeenCalled(); // nothing sent until stop
 
-  it('guided mode auto-finishes and exposes a session at the last word', async () => {
-    const { result } = renderHook(() => useAsr());
+    let session: AsrSession | null = null;
     await act(async () => {
-      await result.current.start('the cat', 'en', 'guided');
-    });
-    await act(async () => {
-      sayThenPause('the cat'); // both words in one utterance
-      await flush();
+      session = await result.current.stop();
     });
     expect(result.current.status).toBe('done');
-    expect(result.current.evaluation?.frontier).toBe(2);
-    expect(result.current.session).toMatchObject({ target: 'the cat', lang: 'en' });
+    expect(transcribeMock).toHaveBeenCalledTimes(1); // exactly one round-trip per line
+    expect(result.current.evaluation?.accuracy).toBe(1);
+    expect(session).toMatchObject({ target: 'the cat', lang: 'en' });
   });
 
-  it('guided skip advances past the current word and marks it skipped', async () => {
+  it('line mode tags tokens with the clicked chunk index for highlight localization', async () => {
     const { result } = renderHook(() => useAsr());
     await act(async () => {
-      await result.current.start('the cat', 'en', 'guided');
+      await result.current.start('the cat', 'en', 'line', 3);
     });
-    act(() => result.current.skip());
-    expect(result.current.evaluation?.frontier).toBe(1);
-    expect(result.current.evaluation?.status[0]).toBe('skipped');
+    await act(async () => {
+      await result.current.stop();
+    });
+    const tokens = result.current.evaluation?.tokens ?? [];
+    expect(tokens.length).toBe(2);
+    expect(tokens.every((t) => t.chunkIndex === 3)).toBe(true);
   });
 });

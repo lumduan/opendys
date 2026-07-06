@@ -42,8 +42,8 @@ export function AsrPlaygroundPage() {
     void asr.start(text, lang);
   };
 
-  const handleStop = () => {
-    const session = asr.stop();
+  const handleStop = async () => {
+    const session = await asr.stop();
     if (session) {
       saveAsrSession(session);
       setSaved(true);

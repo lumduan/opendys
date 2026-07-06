@@ -36,6 +36,8 @@ export function Reader({ text, lang }: ReaderProps) {
   const speech = useSpeech();
   const asr = useAsr();
   const [practiceMode, setPracticeMode] = useState<AsrMode>('free');
+  // Line mode: whether clicking a line plays it via TTS before recording (default on = "click reads aloud").
+  const [ttsPreview, setTtsPreview] = useState(true);
   const surfaceRef = useRef<HTMLDivElement>(null);
 
   const chunks = useMemo(() => splitSpeechChunks(text), [text]);
@@ -54,7 +56,7 @@ export function Reader({ text, lang }: ReaderProps) {
     resetAsr();
   }, [text, lang, resetAsr]);
 
-  // Persist a finished session (manual stop OR guided auto-finish) once, on-device.
+  // Persist a finished session once, on-device.
   useEffect(() => {
     if (asr.session) saveAsrSession(asr.session);
   }, [asr.session]);
@@ -76,17 +78,34 @@ export function Reader({ text, lang }: ReaderProps) {
   const canPractice = asrAvailable && text.trim() !== '';
   const accuracyPct = Math.round((asr.evaluation?.accuracy ?? 0) * 100);
   const missed = asr.evaluation ? [...asr.evaluation.mispronounced, ...asr.evaluation.skipped] : [];
-  const guided = asr.mode === 'guided';
-  const total = asr.evaluation?.tokens.length ?? 0;
-  const cursor = asr.evaluation?.frontier ?? 0;
-
-  const handleSpeakChunk = (index: number, chunkText: string) => {
-    if (voiceAvailable) speech.speakChunk(chunkText, lang, index, settings.ttsRate);
-  };
 
   const handlePractice = () => {
     speech.stop(); // stop TTS first: frees the audio channel (no mic feedback) and clears reader-word
     void asr.start(text, lang, practiceMode);
+  };
+
+  // Line mode: click a line → (TTS preview, if enabled) → record your reading of that one line.
+  const handleLinePractice = (index: number) => {
+    const chunk = chunks[index];
+    if (!chunk || chunk.speak === '') return;
+    speech.stop(); // free the audio channel + clear any prior TTS before recording
+    const beginRecording = () => {
+      void asr.start(chunk.raw, lang, 'line', index);
+    };
+    if (ttsPreview && voiceAvailable) {
+      speech.speakChunk(chunk.speak, lang, index, settings.ttsRate, beginRecording);
+    } else {
+      beginRecording();
+    }
+  };
+
+  // A chunk click is a TTS tap in whole-passage mode, or the line-practice trigger in line mode.
+  const handleChunkActivate = (index: number, chunkText: string) => {
+    if (practiceMode === 'line') {
+      handleLinePractice(index);
+      return;
+    }
+    if (voiceAvailable) speech.speakChunk(chunkText, lang, index, settings.ttsRate);
   };
 
   const handleStopPractice = () => {
@@ -136,36 +155,34 @@ export function Reader({ text, lang }: ReaderProps) {
                   </button>
                   <button
                     type="button"
-                    className={`btn btn-xs join-item ${practiceMode === 'guided' ? 'btn-active' : ''}`}
-                    onClick={() => setPracticeMode('guided')}
-                    data-testid="mode-guided"
+                    className={`btn btn-xs join-item ${practiceMode === 'line' ? 'btn-active' : ''}`}
+                    onClick={() => setPracticeMode('line')}
+                    data-testid="mode-line"
                   >
-                    {tAsr.modeGuided}
+                    {tAsr.modeLine}
                   </button>
                 </div>
               )}
+              {practiceMode === 'line' && !recording && (
+                <button
+                  type="button"
+                  className="btn btn-xs btn-ghost"
+                  onClick={() => setTtsPreview((value) => !value)}
+                  data-testid="tts-preview-toggle"
+                >
+                  {ttsPreview ? tAsr.ttsPreviewOn : tAsr.ttsPreviewOff}
+                </button>
+              )}
               {recording ? (
-                <>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-error"
-                    onClick={handleStopPractice}
-                    data-testid="asr-stop"
-                  >
-                    {tAsr.stop}
-                  </button>
-                  {guided && (
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-ghost"
-                      onClick={asr.skip}
-                      data-testid="asr-skip"
-                    >
-                      {tAsr.skip}
-                    </button>
-                  )}
-                </>
-              ) : (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-error"
+                  onClick={handleStopPractice}
+                  data-testid="asr-stop"
+                >
+                  {tAsr.stop}
+                </button>
+              ) : practiceMode === 'free' ? (
                 <button
                   type="button"
                   className="btn btn-sm btn-primary"
@@ -175,6 +192,10 @@ export function Reader({ text, lang }: ReaderProps) {
                 >
                   🎤 {tAsr.practice}
                 </button>
+              ) : (
+                <span className="text-xs text-base-content/70" data-testid="line-hint">
+                  👆 {tAsr.lineHint}
+                </span>
               )}
             </>
           )}
@@ -215,26 +236,14 @@ export function Reader({ text, lang }: ReaderProps) {
               colorCoding={settings.colorCoding}
               palette={palette}
               active={index === speech.activeChunkIndex}
-              speakable={chunk.speak !== '' && voiceAvailable}
-              onSpeak={handleSpeakChunk}
+              speakable={chunk.speak !== '' && (practiceMode === 'line' ? asrAvailable : voiceAvailable)}
+              onSpeak={handleChunkActivate}
             />
           ))}
         </div>
       </ReadingRuler>
 
-      {asr.evaluation && guided && (
-        <div className="mt-3 rounded-box bg-base-100 p-4 shadow-sm" data-testid="asr-guided-readout">
-          {asr.status === 'done' ? (
-            <div className="font-semibold text-success">{tAsr.guidedDone}</div>
-          ) : (
-            <div className="text-sm">
-              <span className="font-semibold">{tAsr.progress}</span> {Math.min(cursor + 1, total)} / {total}
-            </div>
-          )}
-        </div>
-      )}
-
-      {asr.evaluation && !guided && (
+      {asr.evaluation && (
         <div className="mt-3 rounded-box bg-base-100 p-4 shadow-sm" data-testid="asr-readout">
           <div className="text-sm">
             <span className="font-semibold">{tAsr.accuracyLabel}:</span> {accuracyPct}%

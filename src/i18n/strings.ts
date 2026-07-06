@@ -49,6 +49,8 @@ export interface OcrStrings {
     readonly plainView: string;
     readonly confidence: string;
     readonly newImage: string;
+    readonly edit: string;
+    readonly done: string;
   };
   // keys align with OcrErrorKey (src/hooks/useOcr.ts)
   readonly errors: {
@@ -82,10 +84,10 @@ export interface AsrStrings {
   readonly mispronouncedLabel: string;
   readonly homeLink: string;
   readonly modeWhole: string;
-  readonly modeGuided: string;
-  readonly skip: string;
-  readonly progress: string;
-  readonly guidedDone: string;
+  readonly modeLine: string;
+  readonly ttsPreviewOn: string;
+  readonly ttsPreviewOff: string;
+  readonly lineHint: string;
   // keys align with AsrErrorKey (src/hooks/useAsr.ts)
   readonly errors: {
     readonly unsupported: string;
@@ -214,6 +216,8 @@ export const strings: Record<Language, UIStrings> = {
         plainView: 'Plain text',
         confidence: 'Confidence',
         newImage: 'Read another image',
+        edit: 'Edit',
+        done: 'Done',
       },
       errors: {
         unsupported: 'This browser cannot run on-device OCR (WebAssembly or Web Workers are unavailable).',
@@ -248,10 +252,10 @@ export const strings: Record<Language, UIStrings> = {
       mispronouncedLabel: 'Missed or mispronounced',
       homeLink: '← Home',
       modeWhole: 'Whole passage',
-      modeGuided: 'Word by word',
-      skip: 'Skip',
-      progress: 'Word',
-      guidedDone: '🎉 Great — you read every word!',
+      modeLine: 'Line by line',
+      ttsPreviewOn: '🔊 TTS preview: on',
+      ttsPreviewOff: '🔊 TTS preview: off',
+      lineHint: 'Tap a line to practice',
       errors: {
         unsupported:
           'This browser cannot record audio (MediaRecorder or microphone access is unavailable).',
@@ -366,6 +370,8 @@ export const strings: Record<Language, UIStrings> = {
         plainView: 'ข้อความธรรมดา',
         confidence: 'ความมั่นใจ',
         newImage: 'อ่านรูปอื่น',
+        edit: 'แก้ไข',
+        done: 'เสร็จ',
       },
       errors: {
         unsupported: 'เบราว์เซอร์นี้ไม่รองรับ OCR บนเครื่อง (ไม่มี WebAssembly หรือ Web Worker)',
@@ -400,10 +406,10 @@ export const strings: Record<Language, UIStrings> = {
       mispronouncedLabel: 'คำที่ข้ามหรืออ่านผิด',
       homeLink: '← หน้าแรก',
       modeWhole: 'ทั้งย่อหน้า',
-      modeGuided: 'ทีละคำ',
-      skip: 'ข้าม',
-      progress: 'คำที่',
-      guidedDone: '🎉 เยี่ยม! อ่านครบทุกคำแล้ว',
+      modeLine: 'ทีละบรรทัด',
+      ttsPreviewOn: '🔊 ตัวอย่างเสียง: เปิด',
+      ttsPreviewOff: '🔊 ตัวอย่างเสียง: ปิด',
+      lineHint: 'แตะบรรทัดเพื่อฝึก',
       errors: {
         unsupported: 'เบราว์เซอร์นี้ไม่สามารถบันทึกเสียงได้ (ไม่มี MediaRecorder หรือการเข้าถึงไมโครโฟน)',
         micDenied: 'การเข้าถึงไมโครโฟนถูกปฏิเสธ กรุณาอนุญาตแล้วลองใหม่อีกครั้ง',

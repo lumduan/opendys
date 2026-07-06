@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { strings } from '@/i18n/strings';
 import type { OcrLanguage } from '@/utils/ocr';
 import { detectPrimaryScript, type SpeechLang } from '@/utils/reader';
@@ -20,10 +20,20 @@ function readerLangFor(language: OcrLanguage, text: string): SpeechLang {
 export function OcrResult({ text, confidence, language, onNewImage }: OcrResultProps) {
   const t = strings.en.ocr;
   const [copied, setCopied] = useState(false);
+  // `draft` is the editable source of truth: it mirrors the recognized `text` but the user can correct
+  // OCR mistakes. Reader/TTS/Practice/Copy all read from `draft`, so an edit flows everywhere once Done.
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(text);
+
+  // A fresh OCR result resets the draft and closes the editor.
+  useEffect(() => {
+    setDraft(text);
+    setEditing(false);
+  }, [text]);
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(draft);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -46,12 +56,32 @@ export function OcrResult({ text, confidence, language, onNewImage }: OcrResultP
     <div className="rounded-box bg-base-100 p-6 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-bold">{t.result.heading}</h2>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={copy}>
-          {copied ? t.result.copied : t.result.copy}
-        </button>
+        <div className="flex gap-1">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={copy}>
+            {copied ? t.result.copied : t.result.copy}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => setEditing((value) => !value)}
+            data-testid="ocr-edit-toggle"
+          >
+            {editing ? t.result.done : t.result.edit}
+          </button>
+        </div>
       </div>
 
-      <Reader text={text} lang={readerLangFor(language, text)} />
+      {editing ? (
+        <textarea
+          className="textarea textarea-bordered w-full"
+          rows={6}
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          data-testid="ocr-edit"
+        />
+      ) : (
+        <Reader text={draft} lang={readerLangFor(language, draft)} />
+      )}
 
       {confidence !== null && (
         <p className="mt-3 text-xs text-base-content/60">
