@@ -1,4 +1,4 @@
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 import { isOcrLanguage, type OcrLanguage } from '@/utils/ocr';
 
 interface LanguageSelectProps {
@@ -8,7 +8,7 @@ interface LanguageSelectProps {
 }
 
 export function LanguageSelect({ value, onChange, disabled }: LanguageSelectProps) {
-  const t = strings.en.ocr;
+  const t = useTranslation().t.ocr;
   return (
     <label className="form-control w-full max-w-xs">
       <span className="label-text mb-1">{t.languageLabel}</span>

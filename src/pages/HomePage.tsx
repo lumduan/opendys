@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 
 export function HomePage() {
-  const t = strings.en;
+  const t = useTranslation().t;
   return (
     <section className="mx-auto max-w-3xl px-4 py-12">
       <div className="hero rounded-box bg-base-100 p-8 shadow-sm">
@@ -11,8 +11,8 @@ export function HomePage() {
             <h1 className="text-4xl font-bold">{t.appName}</h1>
             <p className="py-4 text-lg">{t.tagline}</p>
             <div className="flex flex-wrap justify-center gap-2">
-              <span className="badge badge-primary badge-lg">English</span>
-              <span className="badge badge-accent badge-lg">ภาษาไทย</span>
+              <span className="badge badge-primary badge-lg">{t.home.badgeEnglish}</span>
+              <span className="badge badge-accent badge-lg">{t.home.badgeThai}</span>
             </div>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
               <Link to="/read" className="btn btn-primary btn-lg">
@@ -39,16 +39,14 @@ export function HomePage() {
 
       <div className="mt-8 flex flex-wrap justify-center gap-2 text-center">
         <Link to="/dev/thai-colors" className="btn btn-outline btn-sm">
-          Preview the Thai 4-level color engine →
+          {t.home.previewColors}
         </Link>
         <Link to="/dev/asr-playground" className="btn btn-outline btn-sm">
-          Try the ASR reading playground →
+          {t.home.previewAsr}
         </Link>
       </div>
 
-      <p className="mt-8 text-center text-sm text-base-content/60">
-        Offline OCR is live. Reading tools and text-to-speech arrive next (see docs/plans/ROADMAP.md).
-      </p>
+      <p className="mt-8 text-center text-sm text-base-content/60">{t.home.statusNote}</p>
     </section>
   );
 }

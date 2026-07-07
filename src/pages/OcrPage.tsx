@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 import { useOcr } from '@/hooks/useOcr';
 import type { OcrLanguage } from '@/utils/ocr';
 import type { OcrEngineKind } from '@/services/ocr/tesseractClient';
@@ -12,7 +12,7 @@ import { OcrProgress } from '@/components/ocr/OcrProgress';
 import { OcrResult } from '@/components/ocr/OcrResult';
 
 export function OcrPage() {
-  const t = strings.en.ocr;
+  const t = useTranslation().t.ocr;
   const [language, setLanguage] = useState<OcrLanguage>('eng+tha');
   const [engine, setEngine] = useState<OcrEngineKind>('tesseract');
   const [source, setSource] = useState<'upload' | 'camera'>('upload');
@@ -33,7 +33,7 @@ export function OcrPage() {
           <p className="mt-1 text-sm text-base-content/70">{t.intro}</p>
         </div>
         <Link to="/" className="link shrink-0 text-sm">
-          ← Home
+          {t.homeLink}
         </Link>
       </header>
 

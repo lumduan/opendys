@@ -1,19 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '@/context/i18nContext';
 import { THAI_COLORS, type ColorRole } from '@/utils/thai';
 import { buildTextStyle } from '@/utils/latin';
 import { ColorText } from '@/components/reader/ColorText';
 
 const SAMPLE = 'เด็กน้อยอ่านหนังสือ รักษ์ภาษาไทย';
-
-const LEGEND: ReadonlyArray<{ role: ColorRole; label: string }> = [
-  { role: 'consonant', label: 'Consonant (base)' },
-  { role: 'vowel', label: 'Vowel (spacing)' },
-  { role: 'upperVowel', label: 'Upper vowel (สระบน)' },
-  { role: 'lowerVowel', label: 'Lower vowel (สระล่าง)' },
-  { role: 'tone', label: 'Tone mark (วรรณยุกต์)' },
-  { role: 'silent', label: 'Silent / final (การันต์)' },
-];
 
 function Swatch({ role, label }: { role: ColorRole; label: string }) {
   return (
@@ -30,24 +22,34 @@ function Swatch({ role, label }: { role: ColorRole; label: string }) {
 
 /**
  * Developer preview of the Phase 2 engine: renders the 4-level color model live.
- * Not part of the shipping UI (that arrives in Phase 4) — a fast way to eyeball correctness.
+ * Not part of the shipping UI — a fast way to eyeball correctness.
  */
 export function ThaiColorDemoPage() {
+  const t = useTranslation().t.thaiDemo;
   const [text, setText] = useState(SAMPLE);
   // Thai letter-spacing MUST stay 0 — tracking detaches combining marks (see ColorText / index.css).
   const readerStyle = buildTextStyle({ fontSizePx: 40, lineHeight: 2.4, letterSpacingEm: 0 });
 
+  const legend: ReadonlyArray<{ role: ColorRole; label: string }> = [
+    { role: 'consonant', label: t.legendConsonant },
+    { role: 'vowel', label: t.legendVowel },
+    { role: 'upperVowel', label: t.legendUpperVowel },
+    { role: 'lowerVowel', label: t.legendLowerVowel },
+    { role: 'tone', label: t.legendTone },
+    { role: 'silent', label: t.legendSilent },
+  ];
+
   return (
     <section className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Thai 4-level color engine — preview</h1>
+        <h1 className="text-2xl font-bold">{t.title}</h1>
         <Link to="/" className="link text-sm">
-          ← Home
+          {t.homeLink}
         </Link>
       </div>
 
       <label className="form-control">
-        <span className="label-text mb-1">Type or paste Thai text</span>
+        <span className="label-text mb-1">{t.placeholder}</span>
         <textarea
           className="textarea textarea-bordered w-full font-mono"
           rows={2}
@@ -65,7 +67,7 @@ export function ThaiColorDemoPage() {
       </p>
 
       <div className="mt-4 flex flex-wrap gap-4 text-sm">
-        {LEGEND.map((item) => (
+        {legend.map((item) => (
           <Swatch key={item.role} role={item.role} label={item.label} />
         ))}
       </div>

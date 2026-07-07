@@ -1,5 +1,11 @@
-// Minimal UI dictionary. A full i18n context/provider lands in Phase 4 (see ROADMAP).
-// No user-facing strings are inlined in components — everything routes through here.
+// UI dictionary. The active locale is served by I18nProvider (src/context/I18nProvider.tsx) and read
+// via useTranslation(). No user-facing strings are inlined in components — everything routes through
+// here. A missing en/th counterpart is a tsc error (Record<Language, UIStrings>), and the error/progress
+// sub-objects are Record<…Key, string> so they cannot drift from the hooks' runtime enums.
+
+import type { AsrErrorKey } from '@/hooks/useAsr';
+import type { OcrErrorKey } from '@/hooks/useOcr';
+import type { OcrProgressMessageKey } from '@/utils/ocr/progress';
 
 export type Language = 'en' | 'th';
 
@@ -10,6 +16,7 @@ export interface Pillar {
 
 export interface OcrStrings {
   readonly navLabel: string;
+  readonly homeLink: string;
   readonly title: string;
   readonly intro: string;
   readonly languageLabel: string;
@@ -32,14 +39,8 @@ export interface OcrStrings {
     readonly unavailable: string;
     readonly denied: string;
   };
-  // keys align with OcrProgressMessageKey (src/utils/ocr/progress.ts)
-  readonly progress: {
-    readonly initializing: string;
-    readonly loadingLanguage: string;
-    readonly initializingApi: string;
-    readonly recognizing: string;
-    readonly cancel: string;
-  };
+  // message keys align with OcrProgressMessageKey (src/utils/ocr/progress.ts); `cancel` is a button.
+  readonly progress: Readonly<Record<OcrProgressMessageKey, string>> & { readonly cancel: string };
   readonly result: {
     readonly heading: string;
     readonly empty: string;
@@ -52,17 +53,8 @@ export interface OcrStrings {
     readonly edit: string;
     readonly done: string;
   };
-  // keys align with OcrErrorKey (src/hooks/useOcr.ts)
-  readonly errors: {
-    readonly unsupported: string;
-    readonly invalidFile: string;
-    readonly modelMissing: string;
-    readonly recognizeFailed: string;
-    readonly cloudNotConfigured: string;
-    readonly cloudAuth: string;
-    readonly cloudRateLimit: string;
-    readonly cloudFailed: string;
-  };
+  // keys align with OcrErrorKey (src/hooks/useOcr.ts) — Record<> makes drift a tsc error.
+  readonly errors: Readonly<Record<OcrErrorKey, string>>;
 }
 
 export interface AsrStrings {
@@ -91,20 +83,16 @@ export interface AsrStrings {
   readonly doneReading: string;
   readonly silenceLabel: string;
   readonly micLevelLabel: string;
-  // keys align with AsrErrorKey (src/hooks/useAsr.ts)
-  readonly errors: {
-    readonly unsupported: string;
-    readonly micDenied: string;
-    readonly micUnavailable: string;
-    readonly cloudNotConfigured: string;
-    readonly cloudAuth: string;
-    readonly cloudRateLimit: string;
-    readonly cloudFailed: string;
-  };
+  readonly modeAriaLabel: string;
+  readonly saved: string;
+  // keys align with AsrErrorKey (src/hooks/useAsr.ts) — Record<> makes drift a tsc error.
+  readonly errors: Readonly<Record<AsrErrorKey, string>>;
 }
 
 export interface ReaderStrings {
   readonly navLabel: string;
+  readonly homeLink: string;
+  readonly rulerAriaLabel: string;
   readonly pageTitle: string;
   readonly pageIntro: string;
   readonly placeholder: string;
@@ -122,6 +110,10 @@ export interface SettingsStrings {
   readonly open: string;
   readonly close: string;
   readonly reset: string;
+  readonly language: string;
+  readonly languageEnglish: string;
+  readonly languageThai: string;
+  readonly languageToggleAria: string;
   readonly font: string;
   readonly fontDyslexic: string;
   readonly fontSarabun: string;
@@ -142,16 +134,43 @@ export interface SettingsStrings {
   readonly speechRate: string;
 }
 
+export interface HomeStrings {
+  readonly badgeEnglish: string;
+  readonly badgeThai: string;
+  readonly previewColors: string;
+  readonly previewAsr: string;
+  readonly statusNote: string;
+}
+
+export interface UiStrings {
+  readonly loading: string;
+}
+
+export interface ThaiDemoStrings {
+  readonly title: string;
+  readonly placeholder: string;
+  readonly homeLink: string;
+  readonly legendConsonant: string;
+  readonly legendVowel: string;
+  readonly legendUpperVowel: string;
+  readonly legendLowerVowel: string;
+  readonly legendTone: string;
+  readonly legendSilent: string;
+}
+
 export interface UIStrings {
   readonly appName: string;
   readonly tagline: string;
   readonly offlineBadge: string;
   readonly footer: string;
+  readonly home: HomeStrings;
+  readonly ui: UiStrings;
   readonly pillars: readonly Pillar[];
   readonly ocr: OcrStrings;
   readonly asr: AsrStrings;
   readonly reader: ReaderStrings;
   readonly settings: SettingsStrings;
+  readonly thaiDemo: ThaiDemoStrings;
 }
 
 export const strings: Record<Language, UIStrings> = {
@@ -160,6 +179,17 @@ export const strings: Record<Language, UIStrings> = {
     tagline: 'A free, private reading aid for English and Thai — everything runs in your browser.',
     offlineBadge: '100% offline',
     footer: 'opendys · free & open-source · runs entirely in your browser',
+    home: {
+      badgeEnglish: 'English',
+      badgeThai: 'Thai',
+      previewColors: 'Preview the Thai 4-level color engine →',
+      previewAsr: 'Try the ASR reading playground →',
+      statusNote:
+        'Offline OCR is live. Reading tools and text-to-speech arrive next (see docs/plans/ROADMAP.md).',
+    },
+    ui: {
+      loading: 'Loading',
+    },
     pillars: [
       {
         title: 'Offline OCR',
@@ -180,11 +210,12 @@ export const strings: Record<Language, UIStrings> = {
     ],
     ocr: {
       navLabel: 'Read text',
+      homeLink: '← Home',
       title: 'Read text from an image',
       intro: 'Upload or photograph text in English or Thai. Recognition runs entirely on your device.',
       languageLabel: 'Language',
       langEnglish: 'English',
-      langThai: 'ไทย (Thai)',
+      langThai: 'Thai',
       langAuto: 'Auto (English + Thai)',
       tabUpload: 'Upload',
       tabCamera: 'Camera',
@@ -244,8 +275,8 @@ export const strings: Record<Language, UIStrings> = {
       targetLabel: 'Text to read',
       sample: 'Load a sample',
       langEnglish: 'English',
-      langThai: 'ไทย (Thai)',
-      practice: 'Practice reading (ฝึกอ่านออกเสียง)',
+      langThai: 'Thai',
+      practice: 'Practice reading',
       stop: 'Stop',
       requesting: 'Requesting microphone access…',
       recording: 'Listening — read the text aloud.',
@@ -262,6 +293,8 @@ export const strings: Record<Language, UIStrings> = {
       doneReading: 'Done reading',
       silenceLabel: 'Auto-stop after silence',
       micLevelLabel: 'Microphone level',
+      modeAriaLabel: 'practice mode',
+      saved: 'Saved to on-device history ({key}).',
       errors: {
         unsupported:
           'This browser cannot record audio (MediaRecorder or microphone access is unavailable).',
@@ -276,12 +309,14 @@ export const strings: Record<Language, UIStrings> = {
     },
     reader: {
       navLabel: 'Reader',
+      homeLink: '← Home',
+      rulerAriaLabel: 'Reading ruler',
       pageTitle: 'Reader',
       pageIntro: 'Type or paste English or Thai text, then restyle it, color-code it, and hear it read.',
       placeholder: 'Type or paste text to read…',
       sample: 'Load a sample',
       langEnglish: 'English',
-      langThai: 'ไทย (Thai)',
+      langThai: 'Thai',
       readAloud: 'Read aloud',
       stop: 'Stop',
       noVoice: 'No offline voice is installed for this language.',
@@ -292,6 +327,10 @@ export const strings: Record<Language, UIStrings> = {
       open: 'Reading settings',
       close: 'Close',
       reset: 'Reset to defaults',
+      language: 'Language',
+      languageEnglish: 'English',
+      languageThai: 'ภาษาไทย',
+      languageToggleAria: 'Switch language',
       font: 'Font',
       fontDyslexic: 'OpenDyslexic + Sarabun',
       fontSarabun: 'Sarabun (looped)',
@@ -311,12 +350,34 @@ export const strings: Record<Language, UIStrings> = {
       rulerBand: 'Ruler height',
       speechRate: 'Speech speed',
     },
+    thaiDemo: {
+      title: 'Thai 4-level color engine — preview',
+      placeholder: 'Type or paste Thai text',
+      homeLink: '← Home',
+      legendConsonant: 'Consonant (base)',
+      legendVowel: 'Vowel (spacing)',
+      legendUpperVowel: 'Upper vowel',
+      legendLowerVowel: 'Lower vowel',
+      legendTone: 'Tone mark',
+      legendSilent: 'Silent / final',
+    },
   },
   th: {
     appName: 'opendys',
     tagline: 'เครื่องมือช่วยการอ่านฟรี รองรับภาษาไทยและอังกฤษ — ทำงานในเบราว์เซอร์ทั้งหมด',
     offlineBadge: 'ออฟไลน์ 100%',
     footer: 'opendys · ฟรีและโอเพนซอร์ส · ทำงานในเบราว์เซอร์ของคุณ',
+    home: {
+      badgeEnglish: 'อังกฤษ',
+      badgeThai: 'ภาษาไทย',
+      previewColors: 'ดูตัวอย่างระบบระบายสี 4 ระดับของไทย →',
+      previewAsr: 'ลองสนามฝึกอ่านพร้อมวิเคราะห์ผล →',
+      statusNote:
+        'OCR แบบออฟไลน์ใช้งานได้แล้ว เครื่องมืออ่านและเสียงอ่านจะตามมาในขั้นถัดไป (ดู docs/plans/ROADMAP.md)',
+    },
+    ui: {
+      loading: 'กำลังโหลด',
+    },
     pillars: [
       {
         title: 'OCR แบบออฟไลน์',
@@ -337,6 +398,7 @@ export const strings: Record<Language, UIStrings> = {
     ],
     ocr: {
       navLabel: 'อ่านข้อความ',
+      homeLink: '← หน้าแรก',
       title: 'อ่านข้อความจากรูปภาพ',
       intro: 'อัปโหลดหรือถ่ายรูปข้อความภาษาไทยหรืออังกฤษ การแปลงข้อความทำงานบนเครื่องของคุณทั้งหมด',
       languageLabel: 'ภาษา',
@@ -419,6 +481,8 @@ export const strings: Record<Language, UIStrings> = {
       doneReading: 'อ่านจบแล้ว',
       silenceLabel: 'หยุดอัตโนมัติเมื่อเงียบ',
       micLevelLabel: 'ระดับเสียงไมโครโฟน',
+      modeAriaLabel: 'โหมดฝึกอ่าน',
+      saved: 'บันทึกลงประวัติในเครื่องแล้ว ({key})',
       errors: {
         unsupported: 'เบราว์เซอร์นี้ไม่สามารถบันทึกเสียงได้ (ไม่มี MediaRecorder หรือการเข้าถึงไมโครโฟน)',
         micDenied: 'การเข้าถึงไมโครโฟนถูกปฏิเสธ กรุณาอนุญาตแล้วลองใหม่อีกครั้ง',
@@ -432,6 +496,8 @@ export const strings: Record<Language, UIStrings> = {
     },
     reader: {
       navLabel: 'เครื่องอ่าน',
+      homeLink: '← หน้าแรก',
+      rulerAriaLabel: 'ไม้บรรทัดช่วยอ่าน',
       pageTitle: 'เครื่องอ่าน',
       pageIntro: 'พิมพ์หรือวางข้อความภาษาไทยหรืออังกฤษ แล้วปรับรูปแบบ ระบายสี และฟังเสียงอ่าน',
       placeholder: 'พิมพ์หรือวางข้อความที่ต้องการอ่าน…',
@@ -448,6 +514,10 @@ export const strings: Record<Language, UIStrings> = {
       open: 'ตั้งค่าการอ่าน',
       close: 'ปิด',
       reset: 'คืนค่าเริ่มต้น',
+      language: 'ภาษา',
+      languageEnglish: 'English',
+      languageThai: 'ภาษาไทย',
+      languageToggleAria: 'เปลี่ยนภาษา',
       font: 'ฟอนต์',
       fontDyslexic: 'OpenDyslexic + สารบรรณ',
       fontSarabun: 'สารบรรณ (มีหัว)',
@@ -466,6 +536,17 @@ export const strings: Record<Language, UIStrings> = {
       rulerDim: 'ความมืดไม้บรรทัด',
       rulerBand: 'ความสูงไม้บรรทัด',
       speechRate: 'ความเร็วเสียงอ่าน',
+    },
+    thaiDemo: {
+      title: 'เครื่องมือระบายสี 4 ระดับของไทย — ตัวอย่าง',
+      placeholder: 'พิมพ์หรือวางข้อความภาษาไทย',
+      homeLink: '← หน้าแรก',
+      legendConsonant: 'พยัญชนะ (ฐาน)',
+      legendVowel: 'สระ (ระยะ)',
+      legendUpperVowel: 'สระบน',
+      legendLowerVowel: 'สระล่าง',
+      legendTone: 'วรรณยุกต์',
+      legendSilent: 'การันต์ (เงียบ)',
     },
   },
 };

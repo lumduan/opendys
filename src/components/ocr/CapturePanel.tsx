@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 
 interface CapturePanelProps {
   onCapture: (blob: Blob) => void;
@@ -9,7 +9,7 @@ interface CapturePanelProps {
 type CameraState = 'idle' | 'starting' | 'live' | 'unavailable' | 'denied';
 
 export function CapturePanel({ onCapture, disabled }: CapturePanelProps) {
-  const t = strings.en.ocr;
+  const t = useTranslation().t.ocr;
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [state, setState] = useState<CameraState>('idle');

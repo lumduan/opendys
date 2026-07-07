@@ -2,6 +2,7 @@ import './fonts'; // self-hosted @font-face declarations — must come first
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { I18nProvider } from '@/context/I18nProvider';
 import { SettingsProvider } from '@/context/SettingsProvider';
 import { ensurePersistentStorage } from './pwa';
 import App from './App';
@@ -15,9 +16,11 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <StrictMode>
     <BrowserRouter>
-      <SettingsProvider>
-        <App />
-      </SettingsProvider>
+      <I18nProvider>
+        <SettingsProvider>
+          <App />
+        </SettingsProvider>
+      </I18nProvider>
     </BrowserRouter>
   </StrictMode>,
 );
