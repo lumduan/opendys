@@ -46,7 +46,7 @@ export function HomePage() {
         </Link>
       </div>
 
-      <p className="mt-8 text-center text-sm text-base-content/60">{t.home.statusNote}</p>
+      <p className="mt-8 text-center text-sm text-base-content/70">{t.home.statusNote}</p>
     </section>
   );
 }

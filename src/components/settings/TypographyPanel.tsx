@@ -18,7 +18,7 @@ function Slider({ label, min, max, step, value, suffix = '', onChange }: SliderP
     <label className="form-control">
       <div className="label-text flex justify-between">
         <span>{label}</span>
-        <span className="tabular-nums text-base-content/60">
+        <span className="tabular-nums text-base-content/70">
           {value}
           {suffix}
         </span>
