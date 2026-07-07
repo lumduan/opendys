@@ -213,35 +213,37 @@ the codec + read-through end-to-end on Chrome/Safari.
 
 ### 9.1 Core provider, hook & helpers
 
-- [ ] `src/utils/i18n/` — `detectBrowserLanguage`, `parseStoredLang`, `resolveInitialLanguage`,
+- [x] `src/utils/i18n/` — `detectBrowserLanguage`, `parseStoredLang`, `resolveInitialLanguage`,
       `LANG_STORAGE_KEY = 'opendys.lang.v1'` (co-located tests; clears the 90/80 gate)
-- [ ] `src/context/i18nContext.ts` (`I18nContext` + `useTranslation()`, no JSX) +
+- [x] `src/context/i18nContext.ts` (`I18nContext` + `useTranslation()`, no JSX) +
       `src/context/I18nProvider.tsx` (mirrors `SettingsProvider`); wire into `src/main.tsx`;
       `document.documentElement.lang` sync
 
 ### 9.2 Schema hardening & string externalization
 
-- [ ] Retype error/progress sub-objects with `Record<…Key, string>` (enum↔dict drift guard); extend
+- [x] Retype error/progress sub-objects with `Record<…Key, string>` (enum↔dict drift guard); extend
       `UIStrings` + populate **both** `en`/`th` for the ~25 bypass strings + toggle labels; drop
       parenthetical Thai from `en.*` chrome
 
 ### 9.3 Consumer swap & toggle UI
 
-- [ ] Swap the **16** `strings.en[…]` sites → `useTranslation().t…`; localize the 3 hardcoded
+- [x] Swap the **16** `strings.en[…]` sites → `useTranslation().t…`; localize the 3 hardcoded
       aria-labels; replace inlined literals with dictionary keys
-- [ ] Toggle UI: primary Language control in the Settings drawer + compact `EN`/`TH` navbar shortcut
+- [x] Toggle UI: primary Language control in the Settings drawer + compact `EN`/`TH` navbar shortcut
 
 ### 9.4 Verification, a11y & dev-page localization
 
-- [ ] 360 px layout audit (navbar + reader toolbar under Thai); axe sweep of the toggle; `<html lang>` sync
-- [ ] Localize `/dev/thai-colors` + `/dev/asr-playground` (final stretch, low priority)
-- [ ] `typecheck`/`test:run`/`lint`/`build` green; browser-verify EN ⇄ TH on `/reader` + OCR + an error;
-      `v1.7.0` release
+- [~] 360 px layout audit (navbar + reader toolbar under Thai); axe sweep of the toggle; `<html lang>` sync
+      — `<html lang>` sync verified by the provider test; the 360 px / axe pass is pending a real browser
+- [x] Localize `/dev/thai-colors` + `/dev/asr-playground` (final stretch, low priority)
+- [~] `typecheck`/`test:run`/`lint`/`build` green; browser-verify EN ⇄ TH on `/reader` + OCR + an error;
+      `v1.7.0` release — gates green + v1.7.0 released; the live-browser toggle check is pending
 
 **Exit criteria:** every production-critical page (`/reader`, OCR result container, error/alert states,
 settings, home, navbar) renders in the selected language with **zero** hybrid/hardcoded strings; a missing
 `en`↔`th` counterpart fails `tsc` (proven by the `Record<Language, UIStrings>` schema); the app stays
 100% offline with no new egress. Blueprint: [`docs/plans/i18n-framework/`](./i18n-framework/).
+_✅ Met in **v1.7.0** — except the live-browser 360 px / axe pass, which remains a manual check._
 
 ---
 
@@ -278,15 +280,13 @@ otherwise independent.
 
 ## Current Status
 
-- **Active phase:** Phase 9 (i18n / language switcher) — blueprint in
-  [`docs/plans/i18n-framework/`](./i18n-framework/); activates the existing bilingual dictionary via a
-  React context provider + EN ⇄ TH toggle.
-- **Completed:** Phases 0–6 (**v1.0.0**), Phase 7 (**v1.0.1–v1.3.0**), and Phase 8 (**v1.4.0–v1.6.1** —
-  real-time ASR reading assessment, line-by-line practice, auto-stop-on-silence, voice gauge).
-- **Released:** `v1.0.0` → `v1.6.1` on `ghcr.io/lumduan/opendys` (`:latest` = newest, public); GitHub
+- **Active phase:** none — Phase 9 (i18n / language switcher) shipped in **v1.7.0**.
+- **Completed:** Phases 0–6 (**v1.0.0**), Phase 7 (**v1.0.1–v1.3.0**), Phase 8 (**v1.4.0–v1.6.1**), and
+  Phase 9 (**v1.7.0** — EN ⇄ TH language switcher).
+- **Released:** `v1.0.0` → `v1.7.0` on `ghcr.io/lumduan/opendys` (`:latest` = newest, public); GitHub
   Releases published; CI + Release workflows green.
-- **Manual/device checks remaining:** Lighthouse PWA+a11y, real EN/TH TTS audio on-device, camera
-  capture, true airplane-mode OCR (needs one online recognition first — models are runtime-cached); a
-  live Typhoon **200** with a real key (dummy-key wiring verified in CI/local).
+- **Manual/device checks remaining:** EN⇄TH 360 px visual + axe pass (Phase 9 — no headless browser in CI),
+  Lighthouse PWA+a11y, real EN/TH TTS audio on-device, camera capture, true airplane-mode OCR (needs one
+  online recognition first — models are runtime-cached); a live Typhoon **200** with a real key.
 - **Future ideas** live in RFCs (e.g. more languages, model-precache toggle, dark theme with theme-aware
   Thai colors, URL-derived language).
