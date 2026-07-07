@@ -1,4 +1,4 @@
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 import type { OcrEngineKind } from '@/services/ocr/tesseractClient';
 
 interface EngineToggleProps {
@@ -13,7 +13,7 @@ interface EngineToggleProps {
  * because the image then leaves the device.
  */
 export function EngineToggle({ value, onChange, disabled }: EngineToggleProps) {
-  const t = strings.en.ocr;
+  const t = useTranslation().t.ocr;
   const cloud = value === 'typhoon';
   return (
     <div className="form-control w-full max-w-xs">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 import type { OcrLanguage } from '@/utils/ocr';
 import { detectPrimaryScript, type SpeechLang } from '@/utils/reader';
 import { Reader } from '@/components/reader/Reader';
@@ -18,7 +18,7 @@ function readerLangFor(language: OcrLanguage, text: string): SpeechLang {
 }
 
 export function OcrResult({ text, confidence, language, onNewImage }: OcrResultProps) {
-  const t = strings.en.ocr;
+  const t = useTranslation().t.ocr;
   const [copied, setCopied] = useState(false);
   // `draft` is the editable source of truth: it mirrors the recognized `text` but the user can correct
   // OCR mistakes. Reader/TTS/Practice/Copy all read from `draft`, so an edit flows everywhere once Done.

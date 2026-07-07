@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 import { splitSpeechChunks, type SpeechLang } from '@/utils/reader';
 import { THAI_COLORS } from '@/utils/thai';
 import { saveAsrSession, ASR_STORAGE_KEY } from '@/services/asr/asrHistory';
@@ -20,7 +20,7 @@ const noop = () => {};
  * end-to-end against the same DOM the reader ships.
  */
 export function AsrPlaygroundPage() {
-  const t = strings.en.asr;
+  const t = useTranslation().t.asr;
   const [lang, setLang] = useState<SpeechLang>('en');
   const [text, setText] = useState(SAMPLE_EN);
   const [saved, setSaved] = useState(false);
@@ -187,7 +187,7 @@ export function AsrPlaygroundPage() {
       )}
 
       {saved && (
-        <p className="mt-3 text-sm text-success">Saved to on-device history ({ASR_STORAGE_KEY}).</p>
+        <p className="mt-3 text-sm text-success">{t.saved.replace('{key}', ASR_STORAGE_KEY)}</p>
       )}
     </section>
   );

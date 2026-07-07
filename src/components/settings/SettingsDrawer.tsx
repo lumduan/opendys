@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
+import { SUPPORTED_LANGUAGES } from '@/utils/i18n';
 import { TypographyPanel } from './TypographyPanel';
 
 interface SettingsDrawerProps {
@@ -14,7 +15,9 @@ interface SettingsDrawerProps {
  * the gear. Rendered only when open, so its controls never sit off-screen in the tab order.
  */
 export function SettingsDrawer({ open, onClose, returnFocusRef }: SettingsDrawerProps) {
-  const t = strings.en.settings;
+  const i18n = useTranslation();
+  const t = i18n.t.settings;
+  const { lang, setLang } = i18n;
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -54,6 +57,21 @@ export function SettingsDrawer({ open, onClose, returnFocusRef }: SettingsDrawer
             {t.close}
           </button>
         </div>
+        <label className="form-control mb-4">
+          <span className="label-text mb-1">{t.language}</span>
+          <select
+            className="select select-bordered select-sm"
+            value={lang}
+            onChange={(event) => setLang(event.target.value === 'th' ? 'th' : 'en')}
+            data-testid="language-select"
+          >
+            {SUPPORTED_LANGUAGES.map((code) => (
+              <option key={code} value={code}>
+                {code === 'th' ? t.languageThai : t.languageEnglish}
+              </option>
+            ))}
+          </select>
+        </label>
         <TypographyPanel />
       </aside>
     </>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import type { StyleVars } from '@/utils/reader';
+import { useTranslation } from '@/context/i18nContext';
 
 interface ReadingRulerProps {
   enabled: boolean;
@@ -14,6 +15,7 @@ interface ReadingRulerProps {
  * outside this wrapper) stay bright. Band follows the pointer (rAF-throttled) and the keyboard.
  */
 export function ReadingRuler({ enabled, dim, bandPx, children }: ReadingRulerProps) {
+  const { t } = useTranslation();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const bandRef = useRef<HTMLDivElement>(null);
 
@@ -82,7 +84,7 @@ export function ReadingRuler({ enabled, dim, bandPx, children }: ReadingRulerPro
       className="reader-ruler-wrapper"
       tabIndex={0}
       role="group"
-      aria-label="Reading ruler"
+      aria-label={t.reader.rulerAriaLabel}
       onKeyDown={onKeyDown}
     >
       {children}

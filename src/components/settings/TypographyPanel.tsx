@@ -1,4 +1,4 @@
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 import { useSettings } from '@/context/settingsContext';
 import { READER_LIMITS, type FontChoice, type PaletteName } from '@/utils/reader';
 
@@ -59,7 +59,7 @@ function Toggle({
 }
 
 export function TypographyPanel() {
-  const t = strings.en.settings;
+  const t = useTranslation().t.settings;
   const { settings, update, reset } = useSettings();
 
   return (

@@ -1,4 +1,4 @@
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 import type { OcrProgressInfo } from '@/utils/ocr';
 
 interface OcrProgressProps {
@@ -7,7 +7,7 @@ interface OcrProgressProps {
 }
 
 export function OcrProgress({ progress, onCancel }: OcrProgressProps) {
-  const t = strings.en.ocr;
+  const t = useTranslation().t.ocr;
   return (
     <div className="rounded-box bg-base-100 p-6 shadow-sm">
       <div className="mb-2 flex items-center justify-between" aria-live="polite">

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 import { acceptAttribute, isAcceptedImageFile } from '@/utils/ocr';
 
 interface UploadDropzoneProps {
@@ -8,7 +8,7 @@ interface UploadDropzoneProps {
 }
 
 export function UploadDropzone({ onFile, disabled }: UploadDropzoneProps) {
-  const t = strings.en.ocr;
+  const t = useTranslation().t.ocr;
   const [dragOver, setDragOver] = useState(false);
   const [rejected, setRejected] = useState(false);
 

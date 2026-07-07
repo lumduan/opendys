@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 import { useSettings } from '@/context/settingsContext';
 import { useSpeech } from '@/hooks/useSpeech';
 import { useWordHighlight } from '@/hooks/useWordHighlight';
@@ -30,8 +30,9 @@ function containsThai(text: string): boolean {
 }
 
 export function Reader({ text, lang }: ReaderProps) {
-  const t = strings.en.reader;
-  const tAsr = strings.en.asr;
+  const { t: ui } = useTranslation();
+  const t = ui.reader;
+  const tAsr = ui.asr;
   const { settings } = useSettings();
   const speech = useSpeech();
   const asr = useAsr();
@@ -146,7 +147,7 @@ export function Reader({ text, lang }: ReaderProps) {
           {asrAvailable && (
             <>
               {!recording && (
-                <div className="join" role="group" aria-label="practice mode">
+                <div className="join" role="group" aria-label={tAsr.modeAriaLabel}>
                   <button
                     type="button"
                     className={`btn btn-xs join-item ${practiceMode === 'free' ? 'btn-active' : ''}`}

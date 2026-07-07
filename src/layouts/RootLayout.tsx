@@ -1,18 +1,20 @@
 import { Suspense } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { strings } from '@/i18n/strings';
+import { useTranslation } from '@/context/i18nContext';
 import { SettingsButton } from '@/components/settings/SettingsButton';
+import { LanguageToggle } from '@/components/settings/LanguageToggle';
 
 function RouteFallback() {
+  const { t } = useTranslation();
   return (
     <div className="flex justify-center p-16">
-      <span className="loading loading-spinner loading-lg text-primary" aria-label="Loading" />
+      <span className="loading loading-spinner loading-lg text-primary" aria-label={t.ui.loading} />
     </div>
   );
 }
 
 export function RootLayout() {
-  const t = strings.en;
+  const t = useTranslation().t;
   return (
     <div className="flex min-h-screen flex-col bg-base-200 text-base-content">
       <header className="navbar bg-base-100 shadow-sm">
@@ -29,6 +31,7 @@ export function RootLayout() {
           <Link to="/reader" className="btn btn-ghost btn-sm">
             {t.reader.navLabel}
           </Link>
+          <LanguageToggle />
           <SettingsButton />
           <span className="badge badge-outline hidden sm:inline-flex">{t.offlineBadge}</span>
         </div>
