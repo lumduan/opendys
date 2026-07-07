@@ -6,6 +6,26 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-07-07
+
+### Added
+
+- **Bilingual interface: EN ⇄ TH language switcher.** The entire UI — navbar, home, reader, OCR, ASR
+  practice, settings, and errors — now re-skins between English and Thai in one tap. A primary Language
+  control lives in the Settings drawer and a compact `EN`/`TH` shortcut in the navbar. On first visit the
+  app auto-detects the browser language (any `th-*` locale → Thai); the choice persists across reloads
+  (`localStorage` key `opendys.lang.v1`) and `<html lang>` stays in sync for screen-reader pronunciation
+  and the Thai `:lang()` font rule. Switching UI language never interrupts an in-flight OCR / ASR /
+  read-aloud session (it is separate from the TTS voice language).
+
+### Changed
+
+- **No more hybrid strings.** The English UI no longer carries parenthetical Thai for disambiguation —
+  the reader's **Practice reading (ฝึกอ่านออกเสียง)** button is now plain **Practice reading**, and the
+  language selectors drop the `"ไทย (Thai)"` parenthetical. Every user-facing string now routes through
+  the typed dictionary, and a missing English ↔ Thai counterpart — or an enum ↔ dictionary drift — is a
+  compile-time error (`Record<Language, UIStrings>` + `Record<…Key, string>`).
+
 ## [1.6.1] — 2026-07-06
 
 ### Added
