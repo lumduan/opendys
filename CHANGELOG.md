@@ -6,6 +6,15 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.7.2] — 2026-07-07
+
+### Fixed
+
+- **Improved text contrast (axe WCAG AA).** A headless-Chrome axe-core audit found 7 serious
+  color-contrast failures on `text-base-content/60` low-opacity text — the home page status note and the
+  settings slider value labels — failing the 4.5:1 threshold. Bumped to `/70`; all audited surfaces
+  (home/reader/OCR × EN+TH + the open settings drawer) now pass with 0 violations.
+
 ## [1.7.1] — 2026-07-07
 
 ### Fixed
