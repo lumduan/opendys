@@ -183,7 +183,7 @@ site stays fully static/private).
 > per-word feedback via opt-in cloud ASR, and bank on-device progress stats — without giving up the
 > private, offline default.
 
-- [~] **v1.4.0 (in progress)** — opt-in **Practice Reading (ฝึกอ่านออกเสียง)**: same-origin
+- [x] **v1.4.0** — opt-in **Practice Reading (ฝึกอ่านออกเสียง)**: same-origin
       `/api/typhoon-asr` proxy injecting the **server-side** `TYPHOON_API` key (off by default; key never
       in the bundle; `connect-src 'self'` unchanged; no key ⇒ 503 / feature hidden). Micro-batch
       pseudo-streaming (hosted API is batch-only) with **WAV/PCM AudioWorklet capture** (Chrome's
@@ -193,14 +193,55 @@ site stays fully static/private).
       opendys.asr.v1`). `Permissions-Policy` now allows `microphone=(self)`. Blueprint + PoC in
       `docs/plans/realtime-asr-assessment/`; [ADR-0007](./adr/ADR-0007-optional-cloud-asr-and-microphone.md).
 
-**Landed this pass (PoC + Core Parser + infra):** alignment engine + tests (100% coverage), the
-`/api/typhoon-asr` proxy (prod + dev) + capability probe, `useAsr`/`useAsrHighlight`, and the
-`/dev/asr-playground` sandbox. **Next:** production reader integration, the offline stats dashboard, and
-hardening/release (see [wbs.md](./realtime-asr-assessment/wbs.md) P3–P5).
+**Shipped:** the alignment engine + tests (100% coverage), the `/api/typhoon-asr` proxy (prod + dev) +
+capability probe, `useAsr`/`useAsrHighlight`, the `/dev/asr-playground` sandbox, and production reader
+integration as **line-by-line practice** with auto-stop-on-silence + voice gauge (**v1.4.0 → v1.6.1** on
+`ghcr.io/lumduan/opendys`). **Remaining:** the offline stats dashboard and hardening (see
+[wbs.md](./realtime-asr-assessment/wbs.md) P4–P5).
 
 **Exit criteria:** a learner reads a snippet aloud and sees per-word green/red feedback + accuracy;
 sessions persist locally; no key ⇒ feature hidden and the site stays fully static/private; live-verify
 the codec + read-through end-to-end on Chrome/Safari.
+
+---
+
+## Phase 9 — i18n / Language Switcher
+
+> Goal: Activate the existing bilingual dictionary through a React context provider and an explicit
+> EN ⇄ TH toggle, eliminating every hybrid/hardcoded string from the interface — the deferred "Phase 4
+> i18n provider" promise in `src/i18n/strings.ts:1`.
+
+### 9.1 Core provider, hook & helpers
+
+- [ ] `src/utils/i18n/` — `detectBrowserLanguage`, `parseStoredLang`, `resolveInitialLanguage`,
+      `LANG_STORAGE_KEY = 'opendys.lang.v1'` (co-located tests; clears the 90/80 gate)
+- [ ] `src/context/i18nContext.ts` (`I18nContext` + `useTranslation()`, no JSX) +
+      `src/context/I18nProvider.tsx` (mirrors `SettingsProvider`); wire into `src/main.tsx`;
+      `document.documentElement.lang` sync
+
+### 9.2 Schema hardening & string externalization
+
+- [ ] Retype error/progress sub-objects with `Record<…Key, string>` (enum↔dict drift guard); extend
+      `UIStrings` + populate **both** `en`/`th` for the ~25 bypass strings + toggle labels; drop
+      parenthetical Thai from `en.*` chrome
+
+### 9.3 Consumer swap & toggle UI
+
+- [ ] Swap the **16** `strings.en[…]` sites → `useTranslation().t…`; localize the 3 hardcoded
+      aria-labels; replace inlined literals with dictionary keys
+- [ ] Toggle UI: primary Language control in the Settings drawer + compact `EN`/`TH` navbar shortcut
+
+### 9.4 Verification, a11y & dev-page localization
+
+- [ ] 360 px layout audit (navbar + reader toolbar under Thai); axe sweep of the toggle; `<html lang>` sync
+- [ ] Localize `/dev/thai-colors` + `/dev/asr-playground` (final stretch, low priority)
+- [ ] `typecheck`/`test:run`/`lint`/`build` green; browser-verify EN ⇄ TH on `/reader` + OCR + an error;
+      `v1.7.0` release
+
+**Exit criteria:** every production-critical page (`/reader`, OCR result container, error/alert states,
+settings, home, navbar) renders in the selected language with **zero** hybrid/hardcoded strings; a missing
+`en`↔`th` counterpart fails `tsc` (proven by the `Record<Language, UIStrings>` schema); the app stays
+100% offline with no new egress. Blueprint: [`docs/plans/i18n-framework/`](./i18n-framework/).
 
 ---
 
@@ -210,13 +251,15 @@ the codec + read-through end-to-end on Chrome/Safari.
 Phase 0  (bootstrap)
    └── Phase 1  (docs)
           └── Phase 2  (linguistic engine)  ──┐
-                                              ├── Phase 4  (a11y UI)
+                                              ├── Phase 4  (a11y UI)  ──► Phase 9  (i18n)
           Phase 3  (OCR worker)  ────────────┘
                                               └── Phase 5  (PWA + a11y verify)
                                                      └── Phase 6  (hardening + release)
 ```
 
 Phase 3 (OCR) depends only on Phase 0 and can proceed in parallel with Phase 2; Phase 4 needs both.
+Phase 9 (i18n) builds on Phase 4's settings-context precedent and reuses Phase 8's `asr` strings; it is
+otherwise independent.
 
 ## Estimated Timeline
 
@@ -229,18 +272,21 @@ Phase 3 (OCR) depends only on Phase 0 and can proceed in parallel with Phase 2; 
 | 4 | Accessibility UI | L |
 | 5 | PWA + a11y verify | M |
 | 6 | Hardening + release | M |
+| 7 | Thai fidelity + cloud OCR | M |
+| 8 | Real-time ASR assessment | L |
+| 9 | i18n / language switcher | M |
 
 ## Current Status
 
-- **Active phase:** Phase 8 (real-time ASR reading assessment) — **v1.4.0** in progress (PoC + core
-  alignment engine + `/api/typhoon-asr` proxy landed; production reader UI, stats dashboard, and release
-  remain).
-- **Completed:** Phases 0–6 (**v1.0.0**) + Phase 7 — **v1.0.1** (Thai render fix), **v1.1.0** (on-device
-  OCR tuning), **v1.2.0** (opt-in Typhoon cloud OCR), **v1.3.0** (granular Thai coloring + karaoke TTS).
-- **Released:** `v1.0.0` → `v1.2.0` on `ghcr.io/lumduan/opendys` (`:latest` = newest, public); GitHub
+- **Active phase:** Phase 9 (i18n / language switcher) — blueprint in
+  [`docs/plans/i18n-framework/`](./i18n-framework/); activates the existing bilingual dictionary via a
+  React context provider + EN ⇄ TH toggle.
+- **Completed:** Phases 0–6 (**v1.0.0**), Phase 7 (**v1.0.1–v1.3.0**), and Phase 8 (**v1.4.0–v1.6.1** —
+  real-time ASR reading assessment, line-by-line practice, auto-stop-on-silence, voice gauge).
+- **Released:** `v1.0.0` → `v1.6.1` on `ghcr.io/lumduan/opendys` (`:latest` = newest, public); GitHub
   Releases published; CI + Release workflows green.
 - **Manual/device checks remaining:** Lighthouse PWA+a11y, real EN/TH TTS audio on-device, camera
   capture, true airplane-mode OCR (needs one online recognition first — models are runtime-cached); a
   live Typhoon **200** with a real key (dummy-key wiring verified in CI/local).
-- **Future ideas** live in Phase 8 / RFCs (e.g. more languages, model-precache toggle, dark theme with
-  theme-aware Thai colors).
+- **Future ideas** live in RFCs (e.g. more languages, model-precache toggle, dark theme with theme-aware
+  Thai colors, URL-derived language).
