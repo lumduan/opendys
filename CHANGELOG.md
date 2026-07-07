@@ -6,6 +6,15 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.7.1] — 2026-07-07
+
+### Fixed
+
+- **Navbar language toggle no longer overflows on narrow phones.** The v1.7.0 navbar `EN`/`TH` shortcut
+  caused a ~38 px horizontal overflow at 360 px viewports (the navbar was already near capacity). It now
+  appears only at ≥ 400 px; narrower screens switch language via the Settings drawer's Language control
+  (the primary control), which works at 360 px. (Found by a headless-Chrome 360 px audit.)
+
 ## [1.7.0] — 2026-07-07
 
 ### Added
