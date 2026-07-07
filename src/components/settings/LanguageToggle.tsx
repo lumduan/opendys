@@ -6,7 +6,7 @@ export function LanguageToggle() {
   return (
     <button
       type="button"
-      className="btn btn-ghost btn-sm btn-circle text-xs font-semibold"
+      className="btn btn-ghost btn-sm btn-circle hidden text-xs font-semibold min-[400px]:inline-flex"
       onClick={toggle}
       aria-label={t.settings.languageToggleAria}
       data-testid="language-toggle"
