@@ -6,6 +6,19 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.7.3] — 2026-07-09
+
+### Changed
+
+- **Child-friendly Thai copy.** The Thai side of the UI now reads like natural, warm Thai a child (and
+  the parent or teacher beside them) can follow — replacing the earlier translation-first wording that
+  felt robotic. Gone are invented jargon (`ระบบระบายสี 4 ระดับ`, `สนามฝึกอ่าน`), stiff/formal choices
+  (`เครื่องมือ`/`อุปกรณ์`/`กรุณา…`), and passive constructions (`ถูกปฏิเสธ`/`ถูกแยกสี`); in their place,
+  plainer words (`แอป`/`เครื่อง`/`…ได้เลย`), active voice, and short reassurance (`ปลอดภัย`,
+  `ไม่ต้องติดตั้ง`). Error, settings, and progress messages stay warm but clear so adults can still act
+  on them. English is unchanged; this is a copy-only pass over the Thai dictionary (no layout, key, or
+  behavior changes — 360 px audit confirms zero regression).
+
 ## [1.7.2] — 2026-07-07
 
 ### Fixed
