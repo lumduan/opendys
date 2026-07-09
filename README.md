@@ -1,5 +1,10 @@
 # opendys
 
+<p align="center">
+  <a href="README.md"><img alt="Read in English" src="https://img.shields.io/badge/lang-English-2b6cb0?style=for-the-badge"></a>
+  <a href="README.th.md"><img alt="อ่านภาษาไทย" src="https://img.shields.io/badge/lang-ไทย-8a8f98?style=for-the-badge"></a>
+</p>
+
 **A free, 100% client-side dyslexia reading aid for English and Thai.** Capture or paste text, then
 read it in a deeply customizable, dyslexia-friendly interface — with offline OCR, color-coded Thai
 orthography, a reading ruler, and text-to-speech. Everything runs in your browser, and **by default
@@ -10,7 +15,7 @@ nothing you scan or read leaves your device** — with one opt-in exception (clo
 ![100% client-side](https://img.shields.io/badge/backend-none-brightgreen)
 ![offline](https://img.shields.io/badge/works-offline-brightgreen)
 
-![opendys reader — Thai 4-level color coding and dyslexia fonts](docs/assets/reader.png)
+![opendys home — a free, private reading aid for English and Thai](docs/assets/home-en.png)
 
 ## Why
 
@@ -23,7 +28,9 @@ tools ignore.
 
 - **Offline OCR** — snap a photo or upload an image; recognize English + Thai text on-device with
   Tesseract.js. No image is uploaded (an optional [cloud engine](#thai-ocr-enhancement-optional) for
-  hard Thai is off by default).
+  hard Thai is off by default). Recognized Thai is color-coded and ready to read, hear, or practice:
+
+  ![Recognized Thai text from a photo, color-coded, with a confidence score](docs/assets/ocr-result.png)
 - **Thai 4-level color coding** — consonants, vowels, tone marks, and silent finals (การันต์) are
   colored and cued, with an optional **colorblind-safe** palette and a non-color underline for silent
   letters.
@@ -33,6 +40,13 @@ tools ignore.
 - **Read aloud** — offline text-to-speech in English and Thai, tap a sentence or play the whole
   passage.
 - **Installable PWA** — works offline after the first visit; install it like an app.
+
+![The reader with Thai 4-level color coding on a mixed Thai + English sample](docs/assets/reader-color.png)
+
+Every reading control lives in one settings drawer — font, size, spacing, color palette, guide lines,
+the reading ruler, and speech speed:
+
+![The opendys reading-settings drawer with font, size, spacing, and color controls](docs/assets/settings.png)
 
 ## Privacy
 
