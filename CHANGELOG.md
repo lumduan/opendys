@@ -6,6 +6,8 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.7.4] — 2026-07-14
+
 ### Added
 
 - **Configurable nginx DNS resolver flags (`NGINX_RESOLVER_FLAGS`).** The Typhoon upstream resolver
