@@ -16,12 +16,18 @@ FROM nginx:1.31-alpine AS production
 # non-root UID 101); FILTER ensures ONLY ${TYPHOON_API} is substituted, leaving nginx's own $variables
 # intact. No key set ⇒ the proxy renders with an empty key ⇒ graceful 503 / capabilities:false.
 ENV NGINX_ENVSUBST_OUTPUT_DIR=/tmp/nginx-api \
-    NGINX_ENVSUBST_FILTER=TYPHOON_API|NGINX_LOCAL_RESOLVERS \
+    NGINX_ENVSUBST_FILTER=TYPHOON_API|NGINX_LOCAL_RESOLVERS|NGINX_RESOLVER_FLAGS \
     NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
+    NGINX_RESOLVER_FLAGS="ipv6=off" \
     TYPHOON_API=""
-# ^ Empty default so envsubst always has the var DEFINED (an UNSET var would leave the literal
-# ${TYPHOON_API} in the config and nginx would reject it). Deployers override it at runtime
+# ^ TYPHOON_API: empty default so envsubst always has the var DEFINED (an UNSET var would leave the
+# literal ${TYPHOON_API} in the config and nginx would reject it). Deployers override it at runtime
 # (docker run -e TYPHOON_API=… / compose env_file) to turn on cloud OCR; unset ⇒ graceful 503.
+#
+# NGINX_RESOLVER_FLAGS: tunes how the Typhoon upstream hostname is resolved. Default "ipv6=off" keeps
+# the historical IPv4-only behaviour for IPv4/dual-stack hosts. On an IPv6-ONLY-egress host (e.g. an
+# EC2 box with no public IPv4 that reaches api.opentyphoon.ai over IPv6) set "ipv4=off ipv6=on" so
+# nginx resolves the AAAA and never stalls trying an unreachable A record. (nginx ≥1.23.1 supports ipv4=off.)
 
 # Main config: pid + temp paths under /tmp so the unprivileged UID 101 can write.
 COPY <<'EOF' /etc/nginx/nginx.conf
@@ -70,7 +76,7 @@ EOF
 # and it is `include`d into the server block below. `${TYPHOON_API}` is the ONLY substituted token; every
 # `$typhoon_*` below is a real nginx variable left untouched by the FILTER.
 COPY <<'EOF' /etc/nginx/templates/typhoon-api.conf.template
-resolver ${NGINX_LOCAL_RESOLVERS} valid=30s ipv6=off;
+resolver ${NGINX_LOCAL_RESOLVERS} valid=30s ${NGINX_RESOLVER_FLAGS};
 set $typhoon_key "${TYPHOON_API}";
 
 # Capability probe the SPA calls on load to decide whether to offer the cloud toggles. One key
