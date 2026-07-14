@@ -6,6 +6,16 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.7.4] — 2026-07-14
+
+### Added
+
+- **Configurable nginx DNS resolver flags (`NGINX_RESOLVER_FLAGS`).** The Typhoon upstream resolver
+  directive is now rendered from a new `NGINX_RESOLVER_FLAGS` env var (default `ipv6=off`, identical to
+  prior behaviour). A host with IPv6-only egress — e.g. an EC2 instance with no public IPv4 reaching
+  `api.opentyphoon.ai` over IPv6 — can set `ipv4=off ipv6=on` so nginx resolves the AAAA record instead
+  of stalling on an unreachable A record. Backward compatible; no change for IPv4 / dual-stack deployments.
+
 ## [1.7.3] — 2026-07-09
 
 ### Changed
