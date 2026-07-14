@@ -6,6 +6,12 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **`DEPLOY-AWS.md`** — guide for running opendys on EC2 behind a Cloudflare Tunnel with **no public
+  IPv4** (IPv6 egress-only internet gateway, a transient Elastic IP only for image pulls, keyless SSM
+  access, and the update runbook).
+
 ## [1.7.4] — 2026-07-14
 
 ### Added
