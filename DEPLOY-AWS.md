@@ -75,12 +75,28 @@ the SSM instance profile, IMDSv2 required, and an encrypted gp3 root volume.
 4. In **Cloudflare Zero Trust → Networks → Tunnels**, add a **Public Hostname** → your domain →
    service **HTTP** → `localhost:8080`. TLS terminates at Cloudflare; enable **HSTS** at the edge
    (the container intentionally serves plain HTTP for the edge to terminate).
-5. Verify, then **release the Elastic IP** (release, not just disassociate — an idle EIP still bills):
+5. Verify, then **release the Elastic IP** (release, not just disassociate — an idle EIP still bills).
+   [`scripts/verify-deploy.sh`](scripts/verify-deploy.sh) checks reachability, the production build,
+   the precache manifest, `sw.js` caching, CSP, `Permissions-Policy` (`camera` / `microphone`), that
+   `/api/*` is actually served by the proxy rather than swallowed by the SPA fallback, whether
+   `TYPHOON_API` survived the last recreate, SPA fallback, and edge HTML injection. It detects
+   whether it's talking to the origin or Cloudflare and adjusts. Non-zero exit on any failure:
    ```bash
-   curl -sI http://localhost:8080/ | head -1               # HTTP/1.1 200 OK
-   curl -s  http://localhost:8080/api/ocr-capabilities      # {"typhoon":true,"asr":true}
-   sudo docker logs --tail 15 cloudflared                   # "Registered tunnel connection"
+   ./scripts/verify-deploy.sh http://localhost:8080        # on the box
+   sudo docker logs --tail 15 cloudflared                  # "Registered tunnel connection"
    ```
+   Run it against the public URL once the tunnel is up, too:
+   ```bash
+   ./scripts/verify-deploy.sh https://opendys.com
+   ```
+   Every check is exercised against a deliberately-broken deployment by
+   [`scripts/test-verify-deploy.sh`](scripts/test-verify-deploy.sh) — a check nobody has watched
+   fail is not a check.
+
+   **What it cannot tell you:** it reads headers and config only. It cannot prove the PWA works
+   (only cutting the network can — `(await caches.keys()).length` must be `> 0`, then reload
+   offline), and `capabilities:true` only means the key is *set*, not that `api.opentyphoon.ai` is
+   reachable — see the resolver warning above.
 
 ## Updating the image
 
