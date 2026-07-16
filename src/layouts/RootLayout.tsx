@@ -25,12 +25,6 @@ export function RootLayout() {
           </Link>
         </div>
         <div className="flex flex-none items-center gap-1">
-          <Link to="/read" className="btn btn-ghost btn-sm">
-            {t.ocr.navLabel}
-          </Link>
-          <Link to="/reader" className="btn btn-ghost btn-sm">
-            {t.reader.navLabel}
-          </Link>
           <LanguageToggle />
           <SettingsButton />
           <span className="badge badge-outline hidden sm:inline-flex">{t.offlineBadge}</span>
