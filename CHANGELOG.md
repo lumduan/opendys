@@ -6,11 +6,20 @@ All notable changes to opendys are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.7.5] — 2026-07-16
+
 ### Added
 
 - **`DEPLOY-AWS.md`** — guide for running opendys on EC2 behind a Cloudflare Tunnel with **no public
   IPv4** (IPv6 egress-only internet gateway, a transient Elastic IP only for image pulls, keyless SSM
   access, and the update runbook).
+
+### Removed
+
+- **Home-page roadmap notice and two top-nav links.** Dropped the "Offline OCR is live …" status line
+  (English + Thai) from the home page, and removed the **Read text** and **Reader** buttons from the top
+  navigation bar. Both features remain reachable via the home-page buttons; the footer and hero tagline
+  are unchanged.
 
 ## [1.7.4] — 2026-07-14
 
