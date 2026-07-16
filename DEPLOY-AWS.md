@@ -80,14 +80,28 @@ the SSM instance profile, IMDSv2 required, and an encrypted gp3 root volume.
    the precache manifest, `sw.js` caching, CSP, `Permissions-Policy` (`camera` / `microphone`), that
    `/api/*` is actually served by the proxy rather than swallowed by the SPA fallback, whether
    `TYPHOON_API` survived the last recreate, SPA fallback, and edge HTML injection. It detects
-   whether it's talking to the origin or Cloudflare and adjusts. Non-zero exit on any failure:
+   whether it's talking to the origin or Cloudflare and adjusts. Non-zero exit on any failure.
+
+   The box is provisioned with **Docker only — there is no repo checkout on it**, so fetch the
+   script rather than trying to run it from a working copy. The EIP window is also the only time
+   the box has the IPv4 to fetch anything:
    ```bash
-   ./scripts/verify-deploy.sh http://localhost:8080        # on the box
+   curl -fsSL https://raw.githubusercontent.com/lumduan/opendys/main/scripts/verify-deploy.sh \
+     | bash -s http://localhost:8080
    sudo docker logs --tail 15 cloudflared                  # "Registered tunnel connection"
    ```
-   Run it against the public URL once the tunnel is up, too:
+   **This instance is shared with [smart-hand-math](https://github.com/lumduan/smart-hand-math)**
+   on `:8081` (see its `DEPLOY-AWS.md`). It has its own script — run it too. A recreate here
+   shouldn't touch it, but a port collision, or the 1 GB box running out of memory and the kernel
+   picking a victim, would not show up in a status line:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/lumduan/smart-hand-math/main/scripts/verify-deploy.sh \
+     | bash -s http://127.0.0.1:8081
+   ```
+   Once the tunnel is up, run both against their public URLs from a checkout, anywhere:
    ```bash
    ./scripts/verify-deploy.sh https://opendys.com
+   ./scripts/verify-deploy.sh https://handmath.org         # smart-hand-math repo's copy
    ```
    Every check is exercised against a deliberately-broken deployment by
    [`scripts/test-verify-deploy.sh`](scripts/test-verify-deploy.sh) — a check nobody has watched
