@@ -45,8 +45,6 @@ export function HomePage() {
           {t.home.previewAsr}
         </Link>
       </div>
-
-      <p className="mt-8 text-center text-sm text-base-content/70">{t.home.statusNote}</p>
     </section>
   );
 }

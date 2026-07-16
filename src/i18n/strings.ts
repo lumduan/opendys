@@ -15,7 +15,6 @@ export interface Pillar {
 }
 
 export interface OcrStrings {
-  readonly navLabel: string;
   readonly homeLink: string;
   readonly title: string;
   readonly intro: string;
@@ -90,7 +89,6 @@ export interface AsrStrings {
 }
 
 export interface ReaderStrings {
-  readonly navLabel: string;
   readonly homeLink: string;
   readonly rulerAriaLabel: string;
   readonly pageTitle: string;
@@ -139,7 +137,6 @@ export interface HomeStrings {
   readonly badgeThai: string;
   readonly previewColors: string;
   readonly previewAsr: string;
-  readonly statusNote: string;
 }
 
 export interface UiStrings {
@@ -184,8 +181,6 @@ export const strings: Record<Language, UIStrings> = {
       badgeThai: 'Thai',
       previewColors: 'Preview the Thai 4-level color engine →',
       previewAsr: 'Try the ASR reading playground →',
-      statusNote:
-        'Offline OCR is live. Reading tools and text-to-speech arrive next (see docs/plans/ROADMAP.md).',
     },
     ui: {
       loading: 'Loading',
@@ -209,7 +204,6 @@ export const strings: Record<Language, UIStrings> = {
       },
     ],
     ocr: {
-      navLabel: 'Read text',
       homeLink: '← Home',
       title: 'Read text from an image',
       intro: 'Upload or photograph text in English or Thai. Recognition runs entirely on your device.',
@@ -308,7 +302,6 @@ export const strings: Record<Language, UIStrings> = {
       },
     },
     reader: {
-      navLabel: 'Reader',
       homeLink: '← Home',
       rulerAriaLabel: 'Reading ruler',
       pageTitle: 'Reader',
@@ -372,8 +365,6 @@ export const strings: Record<Language, UIStrings> = {
       badgeThai: 'ภาษาไทย',
       previewColors: 'ดูตัวอย่างการแยกสีสระ-พยัญชนะไทย →',
       previewAsr: 'ทดลองฝึกอ่านออกเสียงพร้อมวิเคราะห์ผล →',
-      statusNote:
-        'ระบบสแกนรูปภาพ (OCR) พร้อมใช้งานแล้ว ส่วนระบบช่วยอ่านออฟไลน์และเสียงอ่านกำลังตามมาในขั้นถัดไป (ตรวจสอบแผนงานได้ที่ docs/plans/ROADMAP.md)',
     },
     ui: {
       loading: 'กำลังโหลด',
@@ -397,7 +388,6 @@ export const strings: Record<Language, UIStrings> = {
       },
     ],
     ocr: {
-      navLabel: 'อ่านข้อความ',
       homeLink: '← หน้าแรก',
       title: 'อ่านข้อความจากรูปภาพ',
       intro: 'อัปโหลดหรือถ่ายรูปข้อความภาษาไทยหรืออังกฤษได้เลย ระบบจะอ่านให้ทั้งหมดบนเครื่องของคุณ ปลอดภัย ไม่ส่งข้อมูลออกไปไหน',
@@ -495,7 +485,6 @@ export const strings: Record<Language, UIStrings> = {
       },
     },
     reader: {
-      navLabel: 'เครื่องอ่าน',
       homeLink: '← หน้าแรก',
       rulerAriaLabel: 'ไม้บรรทัดช่วยอ่าน',
       pageTitle: 'เริ่มอ่านข้อความ',
